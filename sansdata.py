@@ -1,0 +1,188 @@
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
+from scipy.optimize import curve_fit
+from math import pi as pi
+import re
+
+def get_file(filename):
+    line=[]
+    # TODO: magic number 
+    length=2105601
+    with open(filename, "r") as file:
+        for i in range(0,length):
+            line.append(file.readline())
+    return line  
+
+def intfromstr(string1):
+    return int(re.search(r'\d+', string1).group())
+
+class SansData:
+    def __init__(self, filename):
+        # Initialization with detector settings and file loading
+        self.filename = filename
+        self.setup_detector_geometry()
+        self.load_data(filename)
+        self.process_data()
+        self.velocity_selector_speed = self.load_velocity_selector()
+        self.L0 = self.calculate_lambda_from_velocity(self.velocity_selector_speed)  # Calculate lambda from velocity
+        print(f"lambda_0: {self.L0}")
+
+        # Define the ranges and beam stop information here
+        # self.x_ranges = [(400, 450), (450, 600)]
+        # self.y_ranges = [(200, 250), (250, 300)]
+        # self.beam_stop_range_x = (430, 480)
+        # self.beam_stop_range_y = (230, 260)
+        # -> Beam stop appears to have w x h of 50 x 30 (at least projected onto detector)
+        
+        # Initialize the attributes with default values
+        self.delta_omega = 1.0  # Example value
+        self.d_sample = 0.05     # Example value
+        self.i0_lambda = 1.0    # Example value
+        self.transmission_lambda = 1.0  # Example value
+        # Define the distances based on the provided geometry (in mm)
+        self.distances = {
+            'D_to_DS': 1320 + 0,        # Distance from diaphragm to sample, + PosFzz
+            'DS_to_S': 1320,     # Distance from DS to Sample
+            'DS_to_KB3': 2802,    # Distance from Sample to KB3
+            'DS_to_KB2': 4793,  # Distance from KB3 to KB2
+            'DS_to_KB1': 8798,  # Distance from KB2 to KB1
+            'DS_to_PB1': 11606  # Distance from KB1 to P01
+        }
+        # Define the apertures sizes (in mm) for each diaphragm
+        self.apertures = {
+            'D': 10,       # Aperture size for diaphragm D
+            'DS': 10,      # Aperture size for DS
+            'S': 10,       # Aperture size for Sample
+            'KB3': 10,     # Aperture size for KB3
+            'KB2': 10,     # Aperture size for KB2
+            'KB1': 10,     # Aperture size for KB1
+            'PB1': 10      # Aperture size for P01
+        }
+
+    def load_data(self, filename):
+        # Assuming get_file, and intfromstr are defined
+        data = get_file(filename)
+        offset = 29
+        self.filename = filename
+        self.sample = data[1]
+        self.runtime = intfromstr(data[46])
+
+        # TODO: decode magic numbers and meaning of offset
+        cdat2 = np.array(data[6398 + offset:1054974 + offset]).astype(int)
+        print(f"Length of 1D array: {cdat2.shape}")
+        cdat2_2d = np.reshape(cdat2, (1024, 1024))
+        self.raw_intensity = np.transpose(cdat2_2d)
+        print(f"{self.xmin}:{self.xmax}, {self.ymin}:{self.ymax}")
+        self.intensity= np.transpose(cdat2_2d[self.xmin:self.xmax, self.ymin:self.ymax])
+        print(f"self.intensity shape: {self.intensity.shape}")
+
+    def process_data(self):
+        self.i_s = np.sum(self.intensity, axis=0) 
+        # Any additional data processing
+        pass
+    
+    def setup_detector_geometry(self):
+        # Detector geometry setup
+
+        # Boundaries for detector (TODO: figure out why these are the specific numbers)
+        self.xmin = 275 
+        self.xmax = 750
+        self.ymin = 50
+        self.ymax = 1024 - 50
+
+        self.y = (1024-100)
+        self.y_pixel_size = 0.5 / self.y #ypixel size [m]
+        self.x = 1024 - 275 - 274 #number of x pixels #changed from 225 to 275
+        self.x_pixel_size = 0.5 / self.x #xpixel size [m]
+        self.d = (self.load_distance() +1320)/1e3 # [m] 1320 is the offset
+        self.n_sectors = 6
+        #Sample to detector distance is FZZ +1320
+        print(f"Pixel size X: {self.x_pixel_size} m, Pixel size Y: {self.y_pixel_size} m")
+    
+    def load_val_from_line(self, n):
+        with open(self.filename, 'r') as file:
+            lines = file.readlines()
+            assert(len(lines) >= n+1)
+            line = lines[n].strip()
+            value = float(line.split('=')[1])
+            return value
+
+    def load_distance(self):
+        return self.load_val_from_line(6)
+    
+    def load_velocity_selector(self):
+        return self.load_val_from_line(17)
+        
+    def calculate_lambda_from_velocity(self, velocity):
+        rpm = np.array([25450, 23100, 21200, 14150, 12700, 11550, 10600, 9750, 9100]) # from the test data
+        wavelengths = np.array([5.0, 5.5, 6.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0])
+        sorted_indices = np.argsort(rpm)
+        sorted_wavelengths = wavelengths[sorted_indices]
+        sorted_rpm = rpm[sorted_indices]
+        
+        # Fits the mapping from RPM to wavelength
+        def fit_func(x, a, b):
+            return a / x + b
+        
+        # Perform linear fit
+        popt, _ = curve_fit(fit_func, sorted_rpm, sorted_wavelengths)
+        interpolated_lambda = fit_func(velocity, *popt)
+        print(f"Interpolated lambda: {interpolated_lambda} Å for velocity {velocity} RPM")
+        return interpolated_lambda
+    
+    def plot_integrated_intensity(self, data=None, axis=0, title='Integrated Intensity', filename=None):
+        """
+        Plot combined integrated intensities along both X and Y axes with both pixel and distance representations.
+        """
+        fig, axes = plt.subplots(2, 1, figsize=(12, 12))  # Arrange plots in 2 rows, 1 column
+
+        # Plot integrated intensity along X-axis (summed over Y) in pixels
+        data = self.intensity
+        integrated_intensity_x = np.sum(data, axis=0)
+        integrated_intensity_y = np.sum(data, axis=1)
+
+        ax = axes[0]
+        x_values_pixels = np.arange(integrated_intensity_x.size)
+        ax.plot(x_values_pixels, integrated_intensity_x)
+
+        # ax.set_xlim(200, 300)
+        ax.set_title('Integrated Intensity over X-axis (Summed over Y)')
+        ax.set_xlabel('X (pixels)')
+        ax.set_ylabel('Integrated Intensity')
+        ax.legend()
+
+        # Plot integrated intensity along Y-axis (summed over X) in pixels
+        ax = axes[1]
+        y_values_pixels = np.arange(integrated_intensity_y.size)
+        ax.plot(y_values_pixels, integrated_intensity_y)
+
+        # ax.set_xlim(300, 600)
+        ax.set_title('Integrated Intensity over Y-axis (Summed over X)')
+        ax.set_xlabel('Y (pixels)')
+        ax.set_ylabel('Integrated Intensity')
+        ax.legend()
+
+        plt.tight_layout()
+        plt.show()
+            
+    def plot_2d(self):
+        """
+        Plot the 2D intensity data.
+        """
+        norm = mcolors.LogNorm(vmin=np.min(self.intensity[self.intensity > 0]), vmax=np.max(self.intensity))
+        plt.figure()
+        plt.pcolormesh(self.intensity, norm=norm, shading='gouraud')
+        plt.colorbar(label='Intensity')
+        plt.xlabel('Pixel X')
+        plt.ylabel('Pixel Y')
+        plt.show()
+        plt.figure()
+        plt.pcolormesh(self.intensity, norm=norm, shading='gouraud')
+        plt.colorbar(label='Intensity')
+        plt.xlabel('Pixel X')
+        plt.ylabel('Pixel Y')
+        plt.xlim(200, 300)
+        plt.ylim(350, 600)
+        plt.show()
+        
