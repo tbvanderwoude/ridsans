@@ -56,7 +56,9 @@ class SansData:
             lines = list(f)
         self.filename = filename
 
+        # https://stackoverflow.com/questions/2361426/get-the-first-item-from-an-iterable-that-matches-a-condition
         header_end = next((x[0] for x in enumerate(lines) if x[1].startswith('[MCS8A A]')), None)
+
         print(header_end)
         self.header_params = {}
         for i in range(header_end):
@@ -65,11 +67,12 @@ class SansData:
             self.header_params[name] = value
 
         self.d = (self.load_distance() + 1320) / 1e3  # [m] 1320 is the offset
+        
         self.sample = ""
         if "Sample" in self.header_params:
             self.sample = self.header_params["Sample"]
-
         print(f"Sample: {self.sample}")
+
         # Measurement data sequences look like [CDAT2,1048576] (regular expression: \[.DAT.,\d* \])
         r = re.compile("\[.DAT.,\d* \]")
         sequence_headers = list(filter(lambda x: r.match(x[1]), enumerate(lines)))
@@ -161,7 +164,7 @@ class SansData:
         )  # Arrange plots in 2 rows, 1 column
 
         # Plot integrated intensity along X-axis (summed over Y) in pixels
-        data = self.intensity
+        data = self.raw_intensity
         integrated_intensity_x = np.sum(data, axis=0)
         integrated_intensity_y = np.sum(data, axis=1)
 
@@ -193,17 +196,18 @@ class SansData:
         """
         Plot the 2D intensity data.
         """
+        data = self.raw_intensity
         norm = mcolors.LogNorm(
-            vmin=np.min(self.intensity[self.intensity > 0]), vmax=np.max(self.intensity)
+            vmin=np.min(data[data > 0]), vmax=np.max(data)
         )
         plt.figure()
-        plt.pcolormesh(self.intensity, norm=norm, shading="gouraud")
+        plt.pcolormesh(data, norm=norm, shading="gouraud")
         plt.colorbar(label="Intensity")
         plt.xlabel("Pixel X")
         plt.ylabel("Pixel Y")
         plt.show()
         plt.figure()
-        plt.pcolormesh(self.intensity, norm=norm, shading="gouraud")
+        plt.pcolormesh(data, norm=norm, shading="gouraud")
         plt.colorbar(label="Intensity")
         plt.xlabel("Pixel X")
         plt.ylabel("Pixel Y")
