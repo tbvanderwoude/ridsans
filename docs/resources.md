@@ -19,5 +19,10 @@ Mantid works using `.raw` and `.nxs` (NeXuS) files. These are HDF5 type files wi
 - [Practical discussion of ISIS SANS data analysis using the GUI](https://archive.mantidproject.org/SANS_Data_Analysis_at_ISIS.html)
 - [Technical overview of ISIS SANS reduction backend](https://developer.mantidproject.org/ISISSANSReductionBackend.html#work-flow-algorithm-orchestration)
 
+## Existing monochromatic SANS in Mantid
+- Oak Ridge National Laboratory SANS
+  - [Normal](https://docs.mantidproject.org/nightly/concepts/ORNL_SANS_Reduction.html)
+  - [HFIR SANS specific](https://docs.mantidproject.org/nightly/algorithms/HFIRSANSReduction-v1.html#algm-hfirsansreduction)
+
 ## OpenCV
 - [Thresholding in OpenCV (for detecting the beam stop?)](https://docs.opencv.org/3.4/d7/d4d/tutorial_py_thresholding.html)
