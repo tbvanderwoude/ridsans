@@ -15,6 +15,7 @@ Mantid works using `.raw` and `.nxs` (NeXuS) files. These are HDF5 type files wi
 
 - [Basic Mantid Python tutorial](https://docs.mantidproject.org/nightly/tutorials/python_in_mantid/index.html)
 - [Mantid Python API documentation](https://docs.mantidproject.org/nightly/api/python/mantid/index.html)
+- [Mantid Algorithm design tutorial](https://docs.mantidproject.org/nightly/tutorials/extending_mantid_with_python/python_algorithms/index.html)
 - [Mantid project forum](https://forum.mantidproject.org/t/welcome-to-the-mantid-forums/8)
 - [Practical discussion of ISIS SANS data analysis using the GUI](https://archive.mantidproject.org/SANS_Data_Analysis_at_ISIS.html)
 - [Technical overview of ISIS SANS reduction backend](https://developer.mantidproject.org/ISISSANSReductionBackend.html#work-flow-algorithm-orchestration)
