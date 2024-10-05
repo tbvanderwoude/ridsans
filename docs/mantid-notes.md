@@ -1,7 +1,7 @@
 # Mantid development notes
 
 ## 1. High-level reduction workflow
-Practical reduction scripts appear to use the [reduction_workflow](https://github.com/mantidproject/mantid/tree/25060ccc17bbc3bba4ed9c564b9407fa84395513/scripts/reduction_workflow) package (in the `scripts/` folder of mantid). Command interfaces are defined (e.g. for [HFIR SANS at ORNL](https://github.com/mantidproject/mantid/blob/25060ccc17bbc3bba4ed9c564b9407fa84395513/scripts/reduction_workflow/instruments/sans/hfir_command_interface.py)) that as a rule manipulate a `Reducer` singleton called `ReductionSingleton`.
+Practical reduction scripts appear to use the [reduction_workflow](https://github.com/mantidproject/mantid/tree/25060ccc17bbc3bba4ed9c564b9407fa84395513/scripts/reduction_workflow) package (in the `scripts/` folder of mantid). Command interfaces are defined (e.g. for [HFIR SANS at ORNL](https://github.com/mantidproject/mantid/blob/25060ccc17bbc3bba4ed9c564b9407fa84395513/scripts/reduction_workflow/instruments/sans/hfir_command_interface.py)) that as a rule manipulate a [`Reducer`](https://github.com/mantidproject/mantid/blob/25060ccc17bbc3bba4ed9c564b9407fa84395513/scripts/reduction_workflow/reducer.py) singleton called `ReductionSingleton`.
 
 `Reducer` is a high-level class that is responsible three key things
 - Loading the instrument
@@ -11,7 +11,7 @@ Practical reduction scripts appear to use the [reduction_workflow](https://githu
 
 Looking at a [SANS command interface](https://github.com/mantidproject/mantid/blob/25060ccc17bbc3bba4ed9c564b9407fa84395513/scripts/reduction_workflow/instruments/sans/hfir_command_interface.py), almost all of the commands after initialization set `reduction_properties` of the singleton. They also get instrument properties through calls like 
 ```python
-sample_spreader_data = find_data(sample_spreader, instrument=ReductionSingleton().get_instrument())
+sample_spreader_data = find_data(sample_spreader, instrument = ReductionSingleton().get_instrument())
 ```
 
 `reduction_properties` are fed into the chosen setup algorithm once for all data in the `Reducer.pre_process` step. 
