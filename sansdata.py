@@ -55,13 +55,24 @@ class SansData:
         with open(filename) as f:
             lines = list(f)
         self.filename = filename
-        self.sample = self.load_val_from_line(1, str)
-        print(f"Sample: {self.sample}")
 
+        header_end = next((x[0] for x in enumerate(lines) if x[1].startswith('[MCS8A A]')), None)
+        print(header_end)
+        self.header_params = {}
+        for i in range(header_end):
+            split_line = lines[i].split("=")
+            name, value = split_line[0], split_line[1].strip()
+            self.header_params[name] = value
+
+        self.d = (self.load_distance() + 1320) / 1e3  # [m] 1320 is the offset
+        self.sample = ""
+        if "Sample" in self.header_params:
+            self.sample = self.header_params["Sample"]
+
+        print(f"Sample: {self.sample}")
         # Measurement data sequences look like [CDAT2,1048576] (regular expression: \[.DAT.,\d* \])
         r = re.compile("\[.DAT.,\d* \]")
         sequence_headers = list(filter(lambda x: r.match(x[1]), enumerate(lines)))
-
         # The CDAT2 count sequence is used to read 1024 x 1024 values
         CDAT2_offset = -1
         CDAT2_length = 1048576  # 1024 x 1024
@@ -101,26 +112,24 @@ class SansData:
         self.y_pixel_size = 0.5 / self.y  # ypixel size [m]
         self.x = 1024 - 275 - 274  # number of x pixels #changed from 225 to 275
         self.x_pixel_size = 0.5 / self.x  # xpixel size [m]
-        self.d = (self.load_distance() + 1320) / 1e3  # [m] 1320 is the offset
         self.n_sectors = 6
         # Sample to detector distance is FZZ +1320
         print(
             f"Pixel size X: {self.x_pixel_size} m, Pixel size Y: {self.y_pixel_size} m"
         )
 
-    def load_val_from_line(self, n, conv=float):
-        with open(self.filename, "r") as file:
-            lines = file.readlines()
-            assert len(lines) >= n + 1
-            line = lines[n].strip()
-            value = conv(line.split("=")[1])
-            return value
-
+    def load_float_with_default(self, name, default):
+        if name in self.header_params:
+            return float(self.header_params[name])
+        else:
+            print(f"Warning: parameter {name} not found, using default value of {default}")
+            return default
+        
     def load_distance(self):
-        return self.load_val_from_line(6)
-
+        return self.load_float_with_default('FZZ', 3400)
+    
     def load_velocity_selector(self):
-        return self.load_val_from_line(17)
+        return self.load_float_with_default('SpeedVS', 21506)
 
     def calculate_lambda_from_velocity(self, velocity):
         rpm = np.array(
@@ -204,4 +213,4 @@ class SansData:
 
 
 if __name__ == "__main__":
-    sample = SansData("data/memb_BS_Q1_6_0Ang.mpa")
+    sample = SansData("data/sans000422.mpa")
