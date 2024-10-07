@@ -1,9 +1,9 @@
 # Mantid development notes
 
 ## 1. High-level reduction workflow
-Practical reduction scripts appear to use the [reduction_workflow](https://github.com/mantidproject/mantid/tree/25060ccc17bbc3bba4ed9c564b9407fa84395513/scripts/reduction_workflow) package (in the `scripts/` folder of mantid). Command interfaces are defined (e.g. for [HFIR SANS at ORNL](https://github.com/mantidproject/mantid/blob/25060ccc17bbc3bba4ed9c564b9407fa84395513/scripts/reduction_workflow/instruments/sans/hfir_command_interface.py)) that as a rule manipulate a [`Reducer`](https://github.com/mantidproject/mantid/blob/25060ccc17bbc3bba4ed9c564b9407fa84395513/scripts/reduction_workflow/reducer.py) singleton called `ReductionSingleton`.
+Practical reduction scripts appear to use the [reduction_workflow](https://github.com/mantidproject/mantid/tree/25060ccc17bbc3bba4ed9c564b9407fa84395513/scripts/reduction_workflow) package (in the `scripts/` folder of mantid). Command interfaces are defined (e.g. for [HFIR SANS at ORNL](https://github.com/mantidproject/mantid/blob/25060ccc17bbc3bba4ed9c564b9407fa84395513/scripts/reduction_workflow/instruments/sans/hfir_command_interface.py)) that as a rule manipulate a [`Reducer`](https://github.com/mantidproject/mantid/blob/25060ccc17bbc3bba4ed9c564b9407fa84395513/scripts/reduction_workflow/reducer.py) singleton called [`ReductionSingleton`](https://github.com/mantidproject/mantid/blob/25060ccc17bbc3bba4ed9c564b9407fa84395513/scripts/reduction_workflow/command_interface.py#L15).
 
-`Reducer` is a high-level class that is responsible three key things
+[`Reducer`](https://github.com/mantidproject/mantid/blob/25060ccc17bbc3bba4ed9c564b9407fa84395513/scripts/reduction_workflow/reducer.py)is a high-level class that is responsible for four key things
 - Loading the instrument
 - Storing all the [reduction_properties] or settings that are fed into the reduction process
 - Running any reduction setup algorithm like [SetupHFIRReduction](https://docs.mantidproject.org/v3.10.1/algorithms/SetupHFIRReduction-v1.html). 
