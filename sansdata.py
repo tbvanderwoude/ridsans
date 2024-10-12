@@ -207,12 +207,12 @@ class SansData:
         plt.ylabel("Pixel Y")
         plt.show()
         plt.figure()
-        plt.pcolormesh(data, norm=norm, shading="gouraud")
-        plt.colorbar(label="Intensity")
-        plt.xlabel("Pixel X")
-        plt.ylabel("Pixel Y")
-        plt.xlim(200, 300)
-        plt.ylim(350, 600)
+        # plt.pcolormesh(data, norm=norm, shading="gouraud")
+        # plt.colorbar(label="Intensity")
+        # plt.xlabel("Pixel X")
+        # plt.ylabel("Pixel Y")
+        # plt.xlim(200, 300)
+        # plt.ylim(350, 600)
         plt.show()
 
 
