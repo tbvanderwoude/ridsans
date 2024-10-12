@@ -19,8 +19,13 @@ sample_spreader_data = find_data(sample_spreader, instrument = ReductionSingleto
 ## 2. Setup and reduction algorithm
 There is a C++ API used by older algorithms and a newer Python API that appears to be used typically now. For instance, [SetupHFIRReduction](https://github.com/mantidproject/mantid/blob/ff859df4a5faa6fa5e3cecb8f2efeb4c4aa53864/Framework/WorkflowAlgorithms/src/SetupHFIRReduction.cpp) is written in C++ whereas [HFIRSANSReduction](https://github.com/mantidproject/mantid/blob/25060ccc17bbc3bba4ed9c564b9407fa84395513/Framework/PythonInterface/plugins/algorithms/WorkflowAlgorithms/HFIRSANSReduction.py) is written in Python. Both interfaces can subscribe algorithms to the `AlgorithmFactory`, making the distinction invisible when using them (except for performance etc.). This `AlgorithmFactory` contains the algorithms which are executed by the `Reducer`. 
 
-## 3. Bolts and nuts of monochromatic Sans
+## 3. Bolts and nuts of monochromatic SANS workspaces in Mantid
 
 GPSANS etc. use a custom XML format called Spice2D. This is loaded by [LoadSpice2D](https://github.com/mantidproject/mantid/blob/c581f90f7efa314220c83ad80b7f332baec7a80f/Framework/DataHandling/src/LoadSpice2D.cpp). This creates a WorkSpace2D. "Note that this type of data doesn't use TOD, so that we use a single dummy bin in X. Each detector is defined as a spectrum of length 1."
 
-Workspaces can be created using [CreateWorkspace](https://docs.mantidproject.org/nightly/algorithms/CreateWorkspace-v1.html#algm-createworkspace), using the trick used by LoadSpice2D to simply have a single bin per 
+Workspaces can be created using [CreateWorkspace](https://docs.mantidproject.org/nightly/algorithms/CreateWorkspace-v1.html#algm-createworkspace), using the trick used by LoadSpice2D to simply have a single bin per detector.
+
+The general structure used by GPSANS is to map each pixel (and monitor) to a detector in the instrument definition XML file. These can then be matched with single bin spectra in the workspace creation step, which makes it possible to apply further reduction steps. 
+
+## 4. Instruments and XML definition files
+Instruments can be loaded into a Workspace using [LoadInstrument](https://docs.mantidproject.org/v6.6.0/algorithms/LoadInstrument-v1.html). You can load custom instrument definitions defined in a [InstrumentDefinitionFile](https://docs.mantidproject.org/v6.6.0/concepts/InstrumentDefinitionFile.html#instrumentdefinitionfile) XML format. A [guide for creating IDFs](https://docs.mantidproject.org/v6.6.0/concepts/CreateanIDF.html#create-an-idf) is available, as is an [annotated example](https://docs.mantidproject.org/v6.6.0/concepts/SANS2DSampleIDF.html#sans2d-sample-idf) of a basic 2D sans instrument (SANS2D)
