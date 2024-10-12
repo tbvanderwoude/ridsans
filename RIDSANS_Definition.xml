@@ -1,0 +1,56 @@
+<?xml version='1.0' encoding='ASCII'?>
+<instrument xmlns="http://www.mantidproject.org/IDF/1.0"
+	    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	    name="GPSANS"
+	    valid-from="2019-10-01 00:00:00"
+	    valid-to="2110-10-10 10:13:12"
+	    last-modified="2019-10-29 13:50:55.780007"
+	    xsi:schemaLocation="http://www.mantidproject.org/IDF/1.0 http://schema.mantidproject.org/IDF/1.0/IDFSchema.xsd">
+  <!--Created by Thom van der Woude, tbvanderwoude@protonmail.com-->
+  <defaults>
+    <length unit="metre"/>
+    <angle unit="degree"/>
+    <reference-frame>
+      <along-beam axis="z"/>
+      <pointing-up axis="y"/>
+      <handedness val="right"/>
+    </reference-frame>
+    <default-view view="3D" axis-view="Z-"/>
+  </defaults>
+    <component type="moderator">
+    <location z="-13.601"/>
+  </component>
+  <type name="moderator" is="Source"/>
+  <component type="sample-position">
+    <location x="0.0" y="0.0" z="0.0"/>
+  </component>
+  <type name="sample-position" is="SamplePos"/>
+  <!---->
+  <!--TYPE: PIXEL-->
+  <!---->
+  <type name="pixel" is="detector">
+    <cuboid id="shape">
+      <left-front-bottom-point x="0.0001375" y="-0.0001375" z="0.0"  />
+      <left-front-top-point  x="0.0001375" y="-0.0001375" z="0.000005"  />
+      <left-back-bottom-point  x="-0.0001375" y="-0.0001375" z="0.0"  />
+      <right-front-bottom-point  x="0.0001375" y="0.0001375" z="0.0"  />
+    </cuboid>
+    <algebra val="shape" />
+  </type>
+
+  <type name="detector-bank" is="RectangularDetector" type="pixel"
+    xpixels="1024" xstart="-0.1406625" xstep="0.000275"
+    ypixels="1024" ystart="-0.1406625" ystep="0.000275" >
+  </type>
+
+  <!---->
+  <!--COMPONENT: SINGLE FLAT PANEL-->
+  <!---->
+  <component type="detector-bank" idstart="0" idfillbyfirst="x" idstep="1" idstepbyrow="1024">
+    <location>
+      <parameter name="z">
+        <logfile id="sample_detector_distance" eq="value"/>
+      </parameter>
+    </location>
+  </component>
+</instrument>
