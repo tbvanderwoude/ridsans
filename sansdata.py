@@ -18,8 +18,6 @@ sorted_rpm = rpm[sorted_indices]
 def rpm_to_lambda0(x, a, b):
     return a / x + b
 
-
-# Perform linear fit
 popt, _ = curve_fit(rpm_to_lambda0, sorted_rpm, sorted_wavelengths)
 
 rpm_converter = lambda rpm: rpm_to_lambda0(rpm, *popt)
