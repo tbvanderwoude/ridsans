@@ -8,19 +8,21 @@ import re
 
 
 class Beamstop:
-    def __init__(self, large_x, small_x, y):
-        self.y = y # m
-        
+    def __init__(self, large_x, small_x, y):        
         self.large = abs(large_x) <= abs(small_x)
         if self.large:
-            self.x = large_x # m
-            w_pixels = 50 # pixels
-            h_pixels = 30 # pixels
+            w_pixels = 62 # pixels
+            h_pixels = 62 # pixels
 
             # TODO: substitute actual value when detector specifications arrive
             pixel_size = 0.000275 # m
             self.w = w_pixels * pixel_size # m
             self.h = h_pixels * pixel_size # m
+
+            # TODO: get actual values that map x, y to BS centre 
+            # (and relevant geometry for actual calculation of projection on detector)
+            self.x = large_x + self.w # m
+            self.y = y - self.h/6 # m
         else:
             raise(NotImplementedError("Size of small beam stop is unknown"))
 
