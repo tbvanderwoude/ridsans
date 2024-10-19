@@ -236,8 +236,8 @@ class SansData:
         plt.colorbar(label="Intensity")
         plt.xlabel("Pixel X")
         plt.ylabel("Pixel Y")
-        plt.show()
-        plt.figure()
+        plt.axvline(512, linestyle='--', color='red')
+        plt.axhline(512, linestyle='--', color='red')
         plt.show()
 
 
