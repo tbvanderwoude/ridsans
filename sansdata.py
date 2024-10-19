@@ -13,33 +13,37 @@ sorted_indices = np.argsort(rpm)
 sorted_wavelengths = wavelengths[sorted_indices]
 sorted_rpm = rpm[sorted_indices]
 
+
 # Fits the mapping from RPM to wavelength
 def rpm_to_lambda0(x, a, b):
     return a / x + b
+
 
 # Perform linear fit
 popt, _ = curve_fit(rpm_to_lambda0, sorted_rpm, sorted_wavelengths)
 
 rpm_converter = lambda rpm: rpm_to_lambda0(rpm, *popt)
 
+
 class Beamstop:
-    def __init__(self, large_x, small_x, y):        
+    def __init__(self, large_x, small_x, y):
         self.large = abs(large_x) <= abs(small_x)
         if self.large:
-            w_pixels = 62 # pixels
-            h_pixels = 62 # pixels
+            w_pixels = 62  # pixels
+            h_pixels = 62  # pixels
 
             # TODO: substitute actual value when detector specifications arrive
-            pixel_size = 0.000275 # m
-            self.w = w_pixels * pixel_size # m
-            self.h = h_pixels * pixel_size # m
+            pixel_size = 0.000275  # m
+            self.w = w_pixels * pixel_size  # m
+            self.h = h_pixels * pixel_size  # m
 
-            # TODO: get actual values that map x, y to BS centre 
+            # TODO: get actual values that map x, y to BS centre
             # (and relevant geometry for actual calculation of projection on detector)
-            self.x = large_x + self.w # m
-            self.y = y - self.h/6 # m
+            self.x = large_x + self.w  # m
+            self.y = y - self.h / 6  # m
         else:
-            raise(NotImplementedError("Size of small beam stop is unknown"))
+            raise (NotImplementedError("Size of small beam stop is unknown"))
+
 
 class SansData:
     def __init__(self, filename):
@@ -57,18 +61,15 @@ class SansData:
             "DS_to_PB1": 11606,  # Distance from KB1 to P01
         }
 
-    def extract_values(lines):
-
-        return extracted_values
-
-
     def load_data(self, filename):
         with open(filename) as f:
             lines = list(f)
         self.filename = filename
 
         # https://stackoverflow.com/questions/2361426/get-the-first-item-from-an-iterable-that-matches-a-condition
-        header_end = next((x[0] for x in enumerate(lines) if x[1].startswith('[MCS8A A]')), None)
+        header_end = next(
+            (x[0] for x in enumerate(lines) if x[1].startswith("[MCS8A A]")), None
+        )
 
         if header_end == 0:
             print("No header was found, assuming this is a background measurement")
@@ -81,16 +82,15 @@ class SansData:
 
             self.d = (self.load_distance() + 1320) / 1e3  # [m] 1320 is the offset
             print("Detector to sample distance: {:.4g} m".format(self.d))
-        
-            self.velocity_selector_speed = self.load_velocity_selector() # RPM
+
+            self.velocity_selector_speed = self.load_velocity_selector()  # RPM
             self.L0 = rpm_converter(self.velocity_selector_speed)
             print("lambda_0: {:.4g} Å".format(self.L0))
             # Create beamstop
-            bs_large_x = float(self.header_params["BSXL"]) / 1e3 # m
-            bs_small_x = float(self.header_params["BSXS"]) / 1e3 # m
-            bs_y = float(self.header_params["BSY"]) / 1e3 # m
+            bs_large_x = float(self.header_params["BSXL"]) / 1e3  # m
+            bs_small_x = float(self.header_params["BSXS"]) / 1e3  # m
+            bs_y = float(self.header_params["BSY"]) / 1e3  # m
             self.beamstop = Beamstop(bs_large_x, bs_small_x, bs_y)
-
 
             self.sample = ""
             if "Sample" in self.header_params:
@@ -114,7 +114,8 @@ class SansData:
                 CDAT2_offset = line
                 assert int(length) == CDAT2_length
         cdat2 = np.array(
-            lines[CDAT2_offset + 1 : CDAT2_offset + 1 + CDAT2_length], dtype=np.int16)
+            lines[CDAT2_offset + 1 : CDAT2_offset + 1 + CDAT2_length], dtype=np.int16
+        )
         # Reshape 1D 1048576 array to 2D 1024 x 1024
         cdat2_2d = np.reshape(cdat2, (1024, 1024))
         # Transpose it to switch axes (I assume because it was column-major and needs to be row-major)
@@ -123,32 +124,41 @@ class SansData:
         # The following extracts the measurement time and total counts from under the [CHN2] header
         # (I have written more elegant solutions)
         r = re.compile("\[CHN\d*\]")
-        sequence_headers = list(filter(lambda x: r.match(x[1]), enumerate(lines[:data_start])))
+        sequence_headers = list(
+            filter(lambda x: r.match(x[1]), enumerate(lines[:data_start]))
+        )
         for line, sequence_header in sequence_headers:
             id = re.findall(r"\[(CHN\d*)\]", sequence_header)[0]
             if id == "CHN2":
-                report_str = "".join(lines[line+2:line+6]).strip()
-                numbers = re.findall(r'\d+\.\d+|\d+', report_str)
+                report_str = "".join(lines[line + 2 : line + 6]).strip()
+                numbers = re.findall(r"\d+\.\d+|\d+", report_str)
                 self.measurement_time = float(numbers[0])
                 self.measurement_count = int(numbers[1])
                 print("\tMeasurement time: {:.4g} s".format(self.measurement_time))
                 print("\tTotal counts: {}".format(self.measurement_count))
-                self.measurement_intensity = self.measurement_count / self.measurement_time
-                print("\tAverage detector intensity: {:.4g} counts/s".format(self.measurement_intensity))
-
+                self.measurement_intensity = (
+                    self.measurement_count / self.measurement_time
+                )
+                print(
+                    "\tAverage detector intensity: {:.4g} counts/s".format(
+                        self.measurement_intensity
+                    )
+                )
 
     def load_float_with_default(self, name, default):
         if name in self.header_params:
             return float(self.header_params[name])
         else:
-            print(f"Warning: parameter {name} not found, using default value of {default}")
+            print(
+                f"Warning: parameter {name} not found, using default value of {default}"
+            )
             return default
-        
+
     def load_distance(self):
-        return self.load_float_with_default('FZZ', 3400)
-    
+        return self.load_float_with_default("FZZ", 3400)
+
     def load_velocity_selector(self):
-        return self.load_float_with_default('SpeedVS', 21506)
+        return self.load_float_with_default("SpeedVS", 21506)
 
     def plot_integrated_intensity(
         self, intensity=None, axis=0, title="Integrated Intensity", filename=None
@@ -191,19 +201,20 @@ class SansData:
         Plot the 2D intensity data.
         """
         data = self.raw_intensity
-        norm = mcolors.LogNorm(
-            vmin=np.min(data[data > 0]), vmax=np.max(data)
-        )
+        norm = mcolors.LogNorm(vmin=np.min(data[data > 0]), vmax=np.max(data))
         plt.figure()
 
-        extent = [0,1024,0,1024]
-        plt.imshow(data, cmap='viridis', extent=extent, norm=norm,aspect='auto')  # cmap defines the color map (optional)
+        extent = [0, 1024, 0, 1024]
+        plt.imshow(
+            data, cmap="viridis", extent=extent, norm=norm, aspect="auto"
+        )  # cmap defines the color map (optional)
         plt.colorbar(label="Intensity")
         plt.xlabel("Pixel X")
         plt.ylabel("Pixel Y")
-        plt.axvline(512, linestyle='--', color='red')
-        plt.axhline(512, linestyle='--', color='red')
+        plt.axvline(512, linestyle="--", color="red")
+        plt.axhline(512, linestyle="--", color="red")
         plt.show()
+
 
 if __name__ == "__main__":
     sample = SansData("data/memb_BS_Q1_6_0Ang.mpa")
