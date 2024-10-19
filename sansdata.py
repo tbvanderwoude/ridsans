@@ -43,7 +43,7 @@ class Beamstop:
 
 class SansData:
     def __init__(self, filename):
-        # Initialization with detector settings and file loading
+        print(f"=== Loading RIDSANS measurement file: {filename} ===")
         self.filename = filename
         self.load_data(filename)
 
@@ -144,21 +144,18 @@ class SansData:
         x_values_pixels = np.arange(integrated_intensity_x.size)
         ax.plot(x_values_pixels, integrated_intensity_x)
 
-        # ax.set_xlim(200, 300)
-        ax.set_title("Integrated Intensity over X-axis (Summed over Y)")
-        ax.set_xlabel("X (pixels)")
-        ax.set_ylabel("Integrated Intensity")
+        ax.set_title("Intensity integrated over y-axis")
+        ax.set_xlabel("$x$ (pixels)")
+        ax.set_ylabel(r"$I(x)$")
         ax.legend()
 
-        # Plot integrated intensity along Y-axis (summed over X) in pixels
         ax = axes[1]
         y_values_pixels = np.arange(integrated_intensity_y.size)
         ax.plot(y_values_pixels, integrated_intensity_y)
 
-        # ax.set_xlim(300, 600)
-        ax.set_title("Integrated Intensity over Y-axis (Summed over X)")
-        ax.set_xlabel("Y (pixels)")
-        ax.set_ylabel("Integrated Intensity")
+        ax.set_title("Intensity integrated over x-axis")
+        ax.set_xlabel(r"$y$ (pixels)")
+        ax.set_ylabel(r"$I(y)$")
         ax.legend()
 
         plt.tight_layout()
