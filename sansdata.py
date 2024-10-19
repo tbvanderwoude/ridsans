@@ -5,7 +5,22 @@ from scipy.optimize import curve_fit
 from math import pi as pi
 import re
 
+rpm = np.array(
+    [25450, 23100, 21200, 14150, 12700, 11550, 10600, 9750, 9100]
+)  # from the test data
+wavelengths = np.array([5.0, 5.5, 6.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0])
+sorted_indices = np.argsort(rpm)
+sorted_wavelengths = wavelengths[sorted_indices]
+sorted_rpm = rpm[sorted_indices]
 
+# Fits the mapping from RPM to wavelength
+def rpm_to_lambda0(x, a, b):
+    return a / x + b
+
+# Perform linear fit
+popt, _ = curve_fit(rpm_to_lambda0, sorted_rpm, sorted_wavelengths)
+
+rpm_converter = lambda rpm: rpm_to_lambda0(rpm, *popt)
 
 class Beamstop:
     def __init__(self, large_x, small_x, y):        
@@ -61,10 +76,8 @@ class SansData:
 
             self.d = (self.load_distance() + 1320) / 1e3  # [m] 1320 is the offset
         
-            self.velocity_selector_speed = self.load_velocity_selector()
-            self.L0 = self.calculate_lambda_from_velocity(
-                self.velocity_selector_speed
-            )  # Calculate lambda from velocity
+            self.velocity_selector_speed = self.load_velocity_selector() # RPM
+            self.L0 = rpm_converter(self.velocity_selector_speed)
             print("lambda_0: {:.4g} Å".format(self.L0))
             # Create beamstop
             bs_large_x = float(self.header_params["BSXL"]) / 1e3 # m
@@ -112,27 +125,8 @@ class SansData:
     def load_velocity_selector(self):
         return self.load_float_with_default('SpeedVS', 21506)
 
-    def calculate_lambda_from_velocity(self, velocity):
-        rpm = np.array(
-            [25450, 23100, 21200, 14150, 12700, 11550, 10600, 9750, 9100]
-        )  # from the test data
-        wavelengths = np.array([5.0, 5.5, 6.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0])
-        sorted_indices = np.argsort(rpm)
-        sorted_wavelengths = wavelengths[sorted_indices]
-        sorted_rpm = rpm[sorted_indices]
-
-        # Fits the mapping from RPM to wavelength
-        def fit_func(x, a, b):
-            return a / x + b
-
-        # Perform linear fit
-        popt, _ = curve_fit(fit_func, sorted_rpm, sorted_wavelengths)
-        interpolated_lambda = fit_func(velocity, *popt)
-        # print(f"Interpolated lambda: {interpolated_lambda} Å for velocity {velocity} RPM")
-        return interpolated_lambda
-
     def plot_integrated_intensity(
-        self, data=None, axis=0, title="Integrated Intensity", filename=None
+        self, intensity=None, axis=0, title="Integrated Intensity", filename=None
     ):
         """
         Plot combined integrated intensities along both X and Y axes with both pixel and distance representations.
@@ -142,9 +136,9 @@ class SansData:
         )  # Arrange plots in 2 rows, 1 column
 
         # Plot integrated intensity along X-axis (summed over Y) in pixels
-        data = self.raw_intensity
-        integrated_intensity_x = np.sum(data, axis=0)
-        integrated_intensity_y = np.sum(data, axis=1)
+        intensity = self.raw_intensity
+        integrated_intensity_x = np.sum(intensity, axis=0)
+        integrated_intensity_y = np.sum(intensity, axis=1)
 
         ax = axes[0]
         x_values_pixels = np.arange(integrated_intensity_x.size)
