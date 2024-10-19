@@ -75,6 +75,7 @@ class SansData:
                 self.header_params[name] = value
 
             self.d = (self.load_distance() + 1320) / 1e3  # [m] 1320 is the offset
+            print("Detector to sample distance: {:.4g} m".format(self.d))
         
             self.velocity_selector_speed = self.load_velocity_selector() # RPM
             self.L0 = rpm_converter(self.velocity_selector_speed)
@@ -105,8 +106,7 @@ class SansData:
                 CDAT2_offset = line
                 assert int(length) == CDAT2_length
         cdat2 = np.array(
-            lines[CDAT2_offset + 1 : CDAT2_offset + 1 + CDAT2_length]
-        ).astype(int)
+            lines[CDAT2_offset + 1 : CDAT2_offset + 1 + CDAT2_length], dtype=np.int16)
         # Reshape 1D 1048576 array to 2D 1024 x 1024
         cdat2_2d = np.reshape(cdat2, (1024, 1024))
         # Transpose it to switch axes (I assume because it was column-major and needs to be row-major)
@@ -170,7 +170,9 @@ class SansData:
             vmin=np.min(data[data > 0]), vmax=np.max(data)
         )
         plt.figure()
-        plt.pcolormesh(data, norm=norm, shading="gouraud")
+
+        extent = [0,1024,0,1024]
+        plt.imshow(data, cmap='viridis', extent=extent, norm=norm,aspect='auto')  # cmap defines the color map (optional)
         plt.colorbar(label="Intensity")
         plt.xlabel("Pixel X")
         plt.ylabel("Pixel Y")
