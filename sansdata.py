@@ -31,11 +31,6 @@ class SansData:
         # Initialization with detector settings and file loading
         self.filename = filename
         self.load_data(filename)
-        self.velocity_selector_speed = self.load_velocity_selector()
-        self.L0 = self.calculate_lambda_from_velocity(
-            self.velocity_selector_speed
-        )  # Calculate lambda from velocity
-        print("lambda_0: {:.4g} Å".format(self.L0))
 
         # Define the distances based on the provided geometry (in mm)
         self.distances = {
@@ -56,29 +51,34 @@ class SansData:
         header_end = next((x[0] for x in enumerate(lines) if x[1].startswith('[MCS8A A]')), None)
 
         if header_end == 0:
-            raise(NotImplementedError("Headerless .mpa files are currently not supported"))
+            print("No header was found, assuming this is a background measurement")
+        else:
+            self.header_params = {}
+            for i in range(header_end):
+                split_line = lines[i].split("=")
+                name, value = split_line[0], split_line[1].strip()
+                self.header_params[name] = value
+
+            self.d = (self.load_distance() + 1320) / 1e3  # [m] 1320 is the offset
         
-        # After this point we can assume the header exists
-
-        self.header_params = {}
-        for i in range(header_end):
-            split_line = lines[i].split("=")
-            name, value = split_line[0], split_line[1].strip()
-            self.header_params[name] = value
-
-        self.d = (self.load_distance() + 1320) / 1e3  # [m] 1320 is the offset
-    
-        # Create beamstop
-        bs_large_x = float(self.header_params["BSXL"]) / 1e3 # m
-        bs_small_x = float(self.header_params["BSXS"]) / 1e3 # m
-        bs_y = float(self.header_params["BSY"]) / 1e3 # m
-        self.beamstop = Beamstop(bs_large_x, bs_small_x, bs_y)
+            self.velocity_selector_speed = self.load_velocity_selector()
+            self.L0 = self.calculate_lambda_from_velocity(
+                self.velocity_selector_speed
+            )  # Calculate lambda from velocity
+            print("lambda_0: {:.4g} Å".format(self.L0))
+            # Create beamstop
+            bs_large_x = float(self.header_params["BSXL"]) / 1e3 # m
+            bs_small_x = float(self.header_params["BSXS"]) / 1e3 # m
+            bs_y = float(self.header_params["BSY"]) / 1e3 # m
+            self.beamstop = Beamstop(bs_large_x, bs_small_x, bs_y)
 
 
-        self.sample = ""
-        if "Sample" in self.header_params:
-            self.sample = self.header_params["Sample"]
-        print(f"Sample: {self.sample}")
+            self.sample = ""
+            if "Sample" in self.header_params:
+                self.sample = self.header_params["Sample"]
+            print(f"Sample: {self.sample}")
+
+        # Extract CDAT2 array from remaining file as raw detector counts
 
         # Measurement data sequences look like [CDAT2,1048576] (regular expression: \[.DAT.,\d* \])
         r = re.compile("\[.DAT.,\d* \]")
@@ -190,4 +190,4 @@ class SansData:
 
 if __name__ == "__main__":
     sample = SansData("data/sans000422.mpa")
-    # bg = SansData("data/08_07_24_backG_1202s_reactor_on.mpa")
+    bg = SansData("data/08_07_24_backG_1202s_reactor_on.mpa")
