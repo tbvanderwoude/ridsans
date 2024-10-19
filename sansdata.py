@@ -6,6 +6,24 @@ from math import pi as pi
 import re
 
 
+
+class Beamstop:
+    def __init__(self, large_x, small_x, y):
+        self.y = y # m
+        
+        self.large = abs(large_x) <= abs(small_x)
+        if self.large:
+            self.x = large_x # m
+            w_pixels = 50 # pixels
+            h_pixels = 30 # pixels
+
+            # TODO: substitute actual value when detector specifications arrive
+            pixel_size = 0.000275 # m
+            self.w = w_pixels * pixel_size # m
+            self.h = h_pixels * pixel_size # m
+        else:
+            raise(NotImplementedError("Size of small beam stop is unknown"))
+
 class SansData:
     def __init__(self, filename):
         # Initialization with detector settings and file loading
@@ -59,7 +77,11 @@ class SansData:
         # https://stackoverflow.com/questions/2361426/get-the-first-item-from-an-iterable-that-matches-a-condition
         header_end = next((x[0] for x in enumerate(lines) if x[1].startswith('[MCS8A A]')), None)
 
-        print(header_end)
+        if header_end == 0:
+            raise(NotImplementedError("Headerless .mpa files are currently not supported"))
+        
+        # After this point we can assume the header exists
+
         self.header_params = {}
         for i in range(header_end):
             split_line = lines[i].split("=")
@@ -67,7 +89,14 @@ class SansData:
             self.header_params[name] = value
 
         self.d = (self.load_distance() + 1320) / 1e3  # [m] 1320 is the offset
-        
+    
+        # Create beamstop
+        bs_large_x = float(self.header_params["BSXL"]) / 1e3 # m
+        bs_small_x = float(self.header_params["BSXS"]) / 1e3 # m
+        bs_y = float(self.header_params["BSY"]) / 1e3 # m
+        self.beamstop = Beamstop(bs_large_x, bs_small_x, bs_y)
+
+
         self.sample = ""
         if "Sample" in self.header_params:
             self.sample = self.header_params["Sample"]
@@ -207,14 +236,9 @@ class SansData:
         plt.ylabel("Pixel Y")
         plt.show()
         plt.figure()
-        # plt.pcolormesh(data, norm=norm, shading="gouraud")
-        # plt.colorbar(label="Intensity")
-        # plt.xlabel("Pixel X")
-        # plt.ylabel("Pixel Y")
-        # plt.xlim(200, 300)
-        # plt.ylim(350, 600)
         plt.show()
 
 
 if __name__ == "__main__":
     sample = SansData("data/sans000422.mpa")
+    # bg = SansData("data/08_07_24_backG_1202s_reactor_on.mpa")
