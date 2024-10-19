@@ -4,7 +4,7 @@
 	    name="GPSANS"
 	    valid-from="2019-10-01 00:00:00"
 	    valid-to="2110-10-10 10:13:12"
-	    last-modified="2019-10-29 13:50:55.780007"
+	    last-modified="2024-10-19 13:50:00.000000"
 	    xsi:schemaLocation="http://www.mantidproject.org/IDF/1.0 http://schema.mantidproject.org/IDF/1.0/IDFSchema.xsd">
   <!--Created by Thom van der Woude, tbvanderwoude@protonmail.com-->
   <defaults>
@@ -49,10 +49,6 @@
   <!--COMPONENT: SINGLE FLAT PANEL-->
   <!---->
   <component type="detector-bank" idstart="0" idfillbyfirst="x" idstep="1" idstepbyrow="1024">
-    <location>
-      <parameter name="z">
-        <logfile id="sample_detector_distance" eq="value"/>
-      </parameter>
-    </location>
+      <location x="0.0" y="0.0" z="0.0"/>
   </component>
 </instrument>
