@@ -57,6 +57,11 @@ class SansData:
             "DS_to_PB1": 11606,  # Distance from KB1 to P01
         }
 
+    def extract_values(lines):
+
+        return extracted_values
+
+
     def load_data(self, filename):
         with open(filename) as f:
             lines = list(f)
@@ -98,10 +103,13 @@ class SansData:
         r = re.compile("\[.DAT.,\d* \]")
         sequence_headers = list(filter(lambda x: r.match(x[1]), enumerate(lines)))
         # The CDAT2 count sequence is used to read 1024 x 1024 values
-        CDAT2_offset = -1
+        data_start = None
+        CDAT2_offset = None
         CDAT2_length = 1048576  # 1024 x 1024
         for line, sequence_header in sequence_headers:
             (id, length) = re.findall(r"\[([0-9a-zA-Z]+),(\d+) \]", sequence_header)[0]
+            if id == "TDAT0":
+                data_start = line
             if id == "CDAT2":
                 CDAT2_offset = line
                 assert int(length) == CDAT2_length
@@ -111,6 +119,23 @@ class SansData:
         cdat2_2d = np.reshape(cdat2, (1024, 1024))
         # Transpose it to switch axes (I assume because it was column-major and needs to be row-major)
         self.raw_intensity = np.transpose(cdat2_2d)
+
+        # The following extracts the measurement time and total counts from under the [CHN2] header
+        # (I have written more elegant solutions)
+        r = re.compile("\[CHN\d*\]")
+        sequence_headers = list(filter(lambda x: r.match(x[1]), enumerate(lines[:data_start])))
+        for line, sequence_header in sequence_headers:
+            id = re.findall(r"\[(CHN\d*)\]", sequence_header)[0]
+            if id == "CHN2":
+                report_str = "".join(lines[line+2:line+6]).strip()
+                numbers = re.findall(r'\d+\.\d+|\d+', report_str)
+                self.measurement_time = float(numbers[0])
+                self.measurement_count = int(numbers[1])
+                print("\tMeasurement time: {:.4g} s".format(self.measurement_time))
+                print("\tTotal counts: {}".format(self.measurement_count))
+                self.measurement_intensity = self.measurement_count / self.measurement_time
+                print("\tAverage detector intensity: {:.4g} counts/s".format(self.measurement_intensity))
+
 
     def load_float_with_default(self, name, default):
         if name in self.header_params:
@@ -180,7 +205,6 @@ class SansData:
         plt.axhline(512, linestyle='--', color='red')
         plt.show()
 
-
 if __name__ == "__main__":
-    sample = SansData("data/sans000422.mpa")
+    sample = SansData("data/memb_BS_Q1_6_0Ang.mpa")
     bg = SansData("data/08_07_24_backG_1202s_reactor_on.mpa")
