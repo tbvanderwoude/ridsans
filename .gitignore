@@ -2,3 +2,4 @@ data/
 .conda
 *.nxs
 __pycache__/
+*.txt
