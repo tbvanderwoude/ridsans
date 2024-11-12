@@ -194,7 +194,7 @@ class SansData:
         plt.tight_layout()
         plt.show()
 
-    def plot_2d(self):
+    def plot_2d(self, plot_centre_cross = True):
         """
         Plot the 2D intensity data.
         """
@@ -209,8 +209,9 @@ class SansData:
         plt.colorbar(label="Intensity")
         plt.xlabel("Pixel X")
         plt.ylabel("Pixel Y")
-        plt.axvline(512, linestyle="--", color="red")
-        plt.axhline(512, linestyle="--", color="red")
+        if plot_centre_cross:
+            plt.axvline(512, linestyle="--", color="red")
+            plt.axhline(512, linestyle="--", color="red")
         plt.show()
 
 
