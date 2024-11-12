@@ -22,6 +22,8 @@ popt, _ = curve_fit(rpm_to_lambda0, sorted_rpm, sorted_wavelengths)
 
 rpm_converter = lambda rpm: rpm_to_lambda0(rpm, *popt)
 
+active_w = 0.15 # m
+active_h = 0.15 # m
 
 class Beamstop:
     def __init__(self, large_x, small_x, y):
