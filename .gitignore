@@ -3,3 +3,4 @@ data/
 *.nxs
 __pycache__/
 *.txt
+*.gz
