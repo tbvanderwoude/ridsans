@@ -147,6 +147,7 @@ class SansData:
                 )
         
         self.I = self.raw_intensity / self.measurement_time
+        # Use Poisson statistics for each pixel
         self.dI = np.sqrt(self.raw_intensity) / self.measurement_time
 
     def load_float_with_default(self, name, default):
