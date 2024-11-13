@@ -15,3 +15,5 @@ neutron scattering program: GRASP](https://doi.org/10.1107/S1600576723007379)
 Transmission measurements are for the purpose of determining the total fraction of beam intensity that is transmitted. This makes it possible to derive $I(q)$ in true units, as this scales the integral of $I(q)$.  
 
 ROI stands for region of interest
+
+There are three types of measurements: scattering, transmission and direct. Direct gives the reference beam intensity in the absence of any sample/can so typically the same tranmission is used for both (i.e. in ISIS SANS reduction). 
