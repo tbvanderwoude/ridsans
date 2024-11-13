@@ -5,6 +5,60 @@ from scipy.optimize import curve_fit
 from math import pi as pi
 import re
 
+
+def plot_I(I, plot_centre_cross = True):
+    """
+    Plot the 2D intensity data.
+    """
+    norm = mcolors.LogNorm(vmin=np.min(I[I > 0]), vmax=np.max(I))
+    plt.figure()
+
+    extent = [0, 1024, 0, 1024]
+    plt.imshow(
+        I, cmap="viridis", extent=extent, norm=norm, aspect="auto"
+    )  # cmap defines the color map (optional)
+    plt.colorbar(label="I")
+    plt.xlabel("Pixel X")
+    plt.ylabel("Pixel Y")
+    if plot_centre_cross:
+        plt.axvline(512, linestyle="--", color="red")
+        plt.axhline(512, linestyle="--", color="red")
+    plt.show()
+
+def plot_projections(I):
+    """
+    Plot combined integrated intensities along both X and Y axes with both pixel and distance representations.
+    """
+    fig, axes = plt.subplots(
+        2, 1, figsize=(12, 12)
+    )  # Arrange plots in 2 rows, 1 column
+
+    # Plot integrated intensity along X-axis (summed over Y) in pixels
+    integrated_intensity_x = np.sum(I, axis=0)
+    integrated_intensity_y = np.sum(I, axis=1)
+
+    ax = axes[0]
+    x_values_pixels = np.arange(integrated_intensity_x.size)
+    ax.plot(x_values_pixels, integrated_intensity_x)
+
+    ax.set_title("Intensity integrated over y-axis")
+    ax.set_xlabel("$x$ (pixels)")
+    ax.set_ylabel(r"$I(x)$")
+    ax.legend()
+
+    ax = axes[1]
+    y_values_pixels = np.arange(integrated_intensity_y.size)
+    ax.plot(y_values_pixels, integrated_intensity_y)
+
+    ax.set_title("Intensity integrated over x-axis")
+    ax.set_xlabel(r"$y$ (pixels)")
+    ax.set_ylabel(r"$I(y)$")
+    ax.legend()
+
+    plt.tight_layout()
+    plt.show()
+
+
 rpm = np.array(
     [25450, 23100, 21200, 14150, 12700, 11550, 10600, 9750, 9100]
 )  # from the test data
@@ -137,12 +191,12 @@ class SansData:
                 self.measurement_count = int(numbers[1])
                 print("\tMeasurement time: {:.4g} s".format(self.measurement_time))
                 print("\tTotal counts: {}".format(self.measurement_count))
-                self.measurement_intensity = (
+                self.I_0 = (
                     self.measurement_count / self.measurement_time
                 )
                 print(
                     "\tAverage detector intensity: {:.4g} counts/s".format(
-                        self.measurement_intensity
+                        self.I_0
                     )
                 )
         
@@ -168,58 +222,10 @@ class SansData:
     def plot_integrated_intensity(
         self, intensity=None, axis=0, title="Integrated Intensity", filename=None
     ):
-        """
-        Plot combined integrated intensities along both X and Y axes with both pixel and distance representations.
-        """
-        fig, axes = plt.subplots(
-            2, 1, figsize=(12, 12)
-        )  # Arrange plots in 2 rows, 1 column
-
-        # Plot integrated intensity along X-axis (summed over Y) in pixels
-        intensity = self.raw_intensity
-        integrated_intensity_x = np.sum(intensity, axis=0)
-        integrated_intensity_y = np.sum(intensity, axis=1)
-
-        ax = axes[0]
-        x_values_pixels = np.arange(integrated_intensity_x.size)
-        ax.plot(x_values_pixels, integrated_intensity_x)
-
-        ax.set_title("Intensity integrated over y-axis")
-        ax.set_xlabel("$x$ (pixels)")
-        ax.set_ylabel(r"$I(x)$")
-        ax.legend()
-
-        ax = axes[1]
-        y_values_pixels = np.arange(integrated_intensity_y.size)
-        ax.plot(y_values_pixels, integrated_intensity_y)
-
-        ax.set_title("Intensity integrated over x-axis")
-        ax.set_xlabel(r"$y$ (pixels)")
-        ax.set_ylabel(r"$I(y)$")
-        ax.legend()
-
-        plt.tight_layout()
-        plt.show()
+        plot_projections(self.I)
 
     def plot_2d(self, plot_centre_cross = True):
-        """
-        Plot the 2D intensity data.
-        """
-        data = self.raw_intensity
-        norm = mcolors.LogNorm(vmin=np.min(data[data > 0]), vmax=np.max(data))
-        plt.figure()
-
-        extent = [0, 1024, 0, 1024]
-        plt.imshow(
-            data, cmap="viridis", extent=extent, norm=norm, aspect="auto"
-        )  # cmap defines the color map (optional)
-        plt.colorbar(label="Intensity")
-        plt.xlabel("Pixel X")
-        plt.ylabel("Pixel Y")
-        if plot_centre_cross:
-            plt.axvline(512, linestyle="--", color="red")
-            plt.axhline(512, linestyle="--", color="red")
-        plt.show()
+        plot_I(self.I,plot_centre_cross)
 
 
 if __name__ == "__main__":
