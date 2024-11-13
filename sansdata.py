@@ -120,6 +120,7 @@ class SansData:
         cdat2_2d = np.reshape(cdat2, (1024, 1024))
         # Transpose it to switch axes (I assume because it was column-major and needs to be row-major)
         self.raw_intensity = np.transpose(cdat2_2d)
+        
 
         # The following extracts the measurement time and total counts from under the [CHN2] header
         # (I have written more elegant solutions)
@@ -144,6 +145,9 @@ class SansData:
                         self.measurement_intensity
                     )
                 )
+        
+        self.I = self.raw_intensity / self.measurement_time
+        self.dI = np.sqrt(self.raw_intensity) / self.measurement_time
 
     def load_float_with_default(self, name, default):
         if name in self.header_params:
