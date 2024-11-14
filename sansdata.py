@@ -59,6 +59,16 @@ def plot_projections(I):
     plt.show()
 
 
+# The numbers represent FZZ in the 4 sample positions
+# This is needed because FZZ is not always present in the .mpa files
+# Why do you ask? I wish I knew
+FZZ_map = {
+    'Q1': 9742.34272,
+    'Q2': 7427.9968,
+    'Q3': 3422.98528,
+    'Q4': 1432.00036
+}
+
 rpm = np.array(
     [25450, 23100, 21200, 14150, 12700, 11550, 10600, 9750, 9100]
 )  # from the test data
@@ -124,9 +134,11 @@ class SansData:
         header_end = next(
             (x[0] for x in enumerate(lines) if x[1].startswith("[MCS8A A]")), None
         )
-
         if header_end == 0:
             print("No header was found, assuming this is a background measurement")
+            for key in FZZ_map.keys():
+                if key in self.filename:
+                    self.d = (FZZ_map[key] + 1320) / 1e3
         else:
             self.header_params = {}
             for i in range(header_end):
@@ -177,7 +189,6 @@ class SansData:
         
 
         # The following extracts the measurement time and total counts from under the [CHN2] header
-        # (I have written more elegant solutions)
         r = re.compile("\[CHN\d*\]")
         sequence_headers = list(
             filter(lambda x: r.match(x[1]), enumerate(lines[:data_start]))
