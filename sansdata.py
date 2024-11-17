@@ -106,7 +106,8 @@ class Beamstop:
             self.x = large_x + self.w  # m
             self.y = y - self.h / 6  # m
         else:
-            raise (NotImplementedError("Size of small beam stop is unknown"))
+            pass
+            # raise (NotImplementedError("Size of small beam stop is unknown"))
 
 
 class SansData:
@@ -185,7 +186,8 @@ class SansData:
         # Reshape 1D 1048576 array to 2D 1024 x 1024
         cdat2_2d = np.reshape(cdat2, (1024, 1024))
         # Transpose it to switch axes (I assume because it was column-major and needs to be row-major)
-        self.raw_intensity = np.transpose(cdat2_2d)
+        # self.raw_intensity = np.transpose(cdat2_2d)
+        self.raw_intensity = np.flip(cdat2_2d,axis=0)
         
 
         # The following extracts the measurement time and total counts from under the [CHN2] header
