@@ -6,7 +6,7 @@ from math import pi as pi
 import re
 
 
-def plot_I(I, plot_centre_cross = True):
+def plot_I(I, plot_centre_cross=True):
     """
     Plot the 2D intensity data.
     """
@@ -24,6 +24,7 @@ def plot_I(I, plot_centre_cross = True):
         plt.axvline(512, linestyle="--", color="red")
         plt.axhline(512, linestyle="--", color="red")
     plt.show()
+
 
 def plot_projections(I):
     """
@@ -62,12 +63,7 @@ def plot_projections(I):
 # The numbers represent FZZ in the 4 sample positions
 # This is needed because FZZ is not always present in the .mpa files
 # Why do you ask? I wish I knew
-FZZ_map = {
-    'Q1': 9742.34272,
-    'Q2': 7427.9968,
-    'Q3': 3422.98528,
-    'Q4': 1432.00036
-}
+FZZ_map = {"Q1": 9742.34272, "Q2": 7427.9968, "Q3": 3422.98528, "Q4": 1432.00036}
 
 rpm = np.array(
     [25450, 23100, 21200, 14150, 12700, 11550, 10600, 9750, 9100]
@@ -82,12 +78,14 @@ sorted_rpm = rpm[sorted_indices]
 def rpm_to_lambda0(x, a, b):
     return a / x + b
 
+
 popt, _ = curve_fit(rpm_to_lambda0, sorted_rpm, sorted_wavelengths)
 
 rpm_converter = lambda rpm: rpm_to_lambda0(rpm, *popt)
 
-active_w = 0.15 # m
-active_h = 0.15 # m
+active_w = 0.15  # m
+active_h = 0.15  # m
+
 
 class Beamstop:
     def __init__(self, large_x, small_x, y):
@@ -115,7 +113,7 @@ class SansData:
         print(f"=== Loading RIDSANS measurement file: {filename} ===")
         self.filename = filename
         self.load_data(filename)
-
+        self.pixel_count = 1024 * 1024
         # Define the distances based on the provided geometry (in mm)
         self.distances = {
             "D_to_DS": 1320 + 0,  # Distance from diaphragm to sample, + PosFzz
@@ -187,8 +185,7 @@ class SansData:
         cdat2_2d = np.reshape(cdat2, (1024, 1024))
         # Transpose it to switch axes (I assume because it was column-major and needs to be row-major)
         # self.raw_intensity = np.transpose(cdat2_2d)
-        self.raw_intensity = np.flip(cdat2_2d,axis=0)
-        
+        self.raw_intensity = np.flip(cdat2_2d, axis=0)
 
         # The following extracts the measurement time and total counts from under the [CHN2] header
         r = re.compile("\[CHN\d*\]")
@@ -204,15 +201,9 @@ class SansData:
                 self.measurement_count = int(numbers[1])
                 print("\tMeasurement time: {:.4g} s".format(self.measurement_time))
                 print("\tTotal counts: {}".format(self.measurement_count))
-                self.I_0 = (
-                    self.measurement_count / self.measurement_time
-                )
-                print(
-                    "\tAverage detector intensity: {:.4g} counts/s".format(
-                        self.I_0
-                    )
-                )
-        
+                self.I_0 = self.measurement_count / self.measurement_time
+                print("\tAverage detector intensity: {:.4g} counts/s".format(self.I_0))
+
         self.I = self.raw_intensity / self.measurement_time
         # Use Poisson statistics for each pixel
         self.dI = np.sqrt(self.raw_intensity) / self.measurement_time
@@ -237,8 +228,8 @@ class SansData:
     ):
         plot_projections(self.I)
 
-    def plot_2d(self, plot_centre_cross = True):
-        plot_I(self.I,plot_centre_cross)
+    def plot_2d(self, plot_centre_cross=True):
+        plot_I(self.I, plot_centre_cross)
 
 
 if __name__ == "__main__":
