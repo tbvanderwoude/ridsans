@@ -1,6 +1,4 @@
 from mantid.simpleapi import *
-
-# from mantid.api import AnalysisDataService as ADS
 from mantid.api import *
 from mantid.kernel import *
 from sansdata import *
@@ -140,6 +138,9 @@ def load_RIDSANS(
     background_file,
     efficiency_file,
 ):
+    """Loads a RIDSANS measurement into a sample workspace (with corrected intensity),
+    a direct measurement workspace for beam centre finding and a pixel adjustment workspace.
+    """
     print("Starting load_RIDSANS")
     relative_pixel_efficiency = np.loadtxt(efficiency_file)
     sample_scatter, sample_transmission, can_scatter, direct, background = (
@@ -160,22 +161,3 @@ def load_RIDSANS(
         relative_pixel_efficiency,
     )
     return ws_sample, ws_direct, mon, ws_pixel_adj
-
-
-if __name__ == "__main__":
-    i = 3
-    sample_scatter_file = f"data/sample1_Q{i}.mpa"
-    sample_transmission_file = f"data/sample_transmission_Q{i}.mpa"
-    can_scatter_file = f"data/sample_empty_cuvette_Q{i}.mpa"
-    efficiency_file = "pixel-efficiency.txt.gz"
-    # I think this translates to direct, not sure
-    direct_file = f"data/no_cuvette_transmission_Q{i}.mpa"
-    background_file = f"data/old-data/09_07_24_backG_3600s_reactor_on_Fish_on.mpa"
-    load_RIDSANS(
-        sample_scatter_file,
-        sample_transmission_file,
-        can_scatter_file,
-        direct_file,
-        background_file,
-        efficiency_file,
-    )
