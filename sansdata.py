@@ -109,8 +109,9 @@ class Beamstop:
 
 
 class SansData:
-    def __init__(self, filename):
-        print(f"=== Loading RIDSANS measurement file: {filename} ===")
+    def __init__(self, filename, log_process=False):
+        self.log_process = log_process
+        self.log(f"=== Loading RIDSANS measurement file: {filename} ===")
         self.filename = filename
         self.load_data(filename)
         self.pixel_count = 1024 * 1024
@@ -124,6 +125,11 @@ class SansData:
             "DS_to_PB1": 11606,  # Distance from KB1 to P01
         }
 
+    def log(self, s):
+        if self.log_process:
+            # This could instead be written to a file
+            print(s)
+
     def load_data(self, filename):
         with open(filename) as f:
             lines = list(f)
@@ -134,7 +140,7 @@ class SansData:
             (x[0] for x in enumerate(lines) if x[1].startswith("[MCS8A A]")), None
         )
         if header_end == 0:
-            print("No header was found, assuming this is a background measurement")
+            self.log("No header was found, assuming this is a background measurement")
             for key in FZZ_map.keys():
                 if key in self.filename:
                     self.d = (FZZ_map[key] + 1320) / 1e3
@@ -146,11 +152,11 @@ class SansData:
                 self.header_params[name] = value
 
             self.d = (self.load_distance() + 1320) / 1e3  # [m] 1320 is the offset
-            print("Detector to sample distance: {:.4g} m".format(self.d))
+            self.log("Detector to sample distance: {:.4g} m".format(self.d))
 
             self.velocity_selector_speed = self.load_velocity_selector()  # RPM
             self.L0 = rpm_converter(self.velocity_selector_speed)
-            print("lambda_0: {:.4g} Å".format(self.L0))
+            self.log("lambda_0: {:.4g} Å".format(self.L0))
             # Create beamstop
             bs_large_x = float(self.header_params["BSXL"]) / 1e3  # m
             bs_small_x = float(self.header_params["BSXS"]) / 1e3  # m
@@ -160,7 +166,7 @@ class SansData:
             self.sample = ""
             if "Sample" in self.header_params:
                 self.sample = self.header_params["Sample"]
-            print(f"Sample: {self.sample}")
+            self.log(f"Sample: {self.sample}")
 
         # Extract CDAT2 array from remaining file as raw detector counts
 
@@ -199,10 +205,12 @@ class SansData:
                 numbers = re.findall(r"\d+\.\d+|\d+", report_str)
                 self.measurement_time = float(numbers[0])
                 self.measurement_count = int(numbers[1])
-                print("\tMeasurement time: {:.4g} s".format(self.measurement_time))
-                print("\tTotal counts: {}".format(self.measurement_count))
+                self.log("\tMeasurement time: {:.4g} s".format(self.measurement_time))
+                self.log("\tTotal counts: {}".format(self.measurement_count))
                 self.I_0 = self.measurement_count / self.measurement_time
-                print("\tAverage detector intensity: {:.4g} counts/s".format(self.I_0))
+                self.log(
+                    "\tAverage detector intensity: {:.4g} counts/s".format(self.I_0)
+                )
 
         self.I = self.raw_intensity / self.measurement_time
         # Use Poisson statistics for each pixel
@@ -212,7 +220,7 @@ class SansData:
         if name in self.header_params:
             return float(self.header_params[name])
         else:
-            print(
+            self.log(
                 f"Warning: parameter {name} not found, using default value of {default}"
             )
             return default
