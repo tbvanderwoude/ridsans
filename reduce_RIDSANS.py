@@ -3,10 +3,34 @@ from mantid.api import *
 from mantid.kernel import *
 import numpy as np
 
-# TODO: get workspaces needed!
 
+def mask_rectangle(ws, w, h, negative=False, offset_x=0, offset_y=0):
+        # Gets large for a 1024 x 1024 detector but at most ~30 MB
+        mask_list = []
+        for i in range(ws.getNumberHistograms()):
+            detector = ws.getDetector(i)
+            # Get the position of the detector
+            position = detector.getPos()
+            if (
+                abs(position.getX() - offset_x) > w / 2
+                or abs(position.getY() - offset_y) > h / 2
+            ) == (not negative):
+                mask_list.append(i + 1)
+        MaskDetectors(Workspace=ws, SpectraList=mask_list)
 
-def reduction_setup_RIDSANS(ws_sample, ws_direct, active_w, active_h):
+def mask_circle(ws, r, negative=False, offset_x=0, offset_y=0):
+    # Gets large for a 1024 x 1024 detector but at most ~30 MB
+    mask_list = []
+    for i in range(ws.getNumberHistograms()):
+        detector = ws.getDetector(i)
+        # Get the position of the detector
+        position = detector.getPos()
+        dist = np.sqrt((position.getX() - offset_x)**2 + (position.getY() - offset_y)**2)
+        if (dist > r) == (not negative):
+            mask_list.append(i + 1)
+    MaskDetectors(Workspace=ws, SpectraList=mask_list)
+    
+def reduction_setup_RIDSANS(ws_sample, ws_direct, active_w, active_h, ROI = None):
     """Finds the beam center and applies a mask"""
     # STEP 1: find beam centre from direct beam
     # Compute the center position, which will be put in a table workspace
@@ -25,21 +49,10 @@ def reduction_setup_RIDSANS(ws_sample, ws_direct, active_w, active_h):
     )
 
     # STEP 2: apply mask
-    def mask_rectangle(ws, w, h, negative=False, offset_x=0, offset_y=0):
-        # Gets large for a 1024 x 1024 detector but at most ~30 MB
-        mask_list = []
-        for i in range(ws.getNumberHistograms()):
-            detector = ws.getDetector(i)
-            # Get the position of the detector
-            position = detector.getPos()
-            if (
-                abs(position.getX() - offset_x) > w / 2
-                or abs(position.getY() - offset_y) > h / 2
-            ) == (not negative):
-                mask_list.append(i + 1)
-        MaskDetectors(Workspace=ws, SpectraList=mask_list)
-
     mask_rectangle(ws_sample, active_w, active_h)
+
+    if ROI is not None:
+        mask_circle(ws_sample, ROI)
 
 
 def reduce_RIDSANS_1D(ws_sample, pixel_adj, active_w):
