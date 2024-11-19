@@ -2,7 +2,7 @@ from mantid.simpleapi import *
 from mantid.api import *
 from mantid.kernel import *
 from sansdata import *
-
+from multiprocessing import Pool
 
 def load_measurement_files(
     sample_scatter_file,
@@ -12,11 +12,8 @@ def load_measurement_files(
     background_file,
     plot_measurements=False,
 ):
-    sample_scatter = SansData(sample_scatter_file)
-    sample_transmission = SansData(sample_transmission_file)
-    can_scatter = SansData(can_scatter_file)
-    direct = SansData(direct_file)
-    background = SansData(background_file)
+    with Pool(5) as p:
+        sample_scatter, sample_transmission, can_scatter, direct, background = p.map(SansData, [sample_scatter_file, sample_transmission_file, can_scatter_file, direct_file, background_file])
     if plot_measurements:
         sample_scatter.plot_2d(True)
         sample_transmission.plot_2d(True)
@@ -160,4 +157,5 @@ def load_RIDSANS(
         background,
         relative_pixel_efficiency,
     )
+    del sample_scatter, sample_transmission, can_scatter, direct, background
     return ws_sample, ws_direct, mon, ws_pixel_adj
