@@ -1,7 +1,7 @@
 from reduce_RIDSANS import *
 from mantid.api import AnalysisDataService as ADS
 
-i = 2
+i = 3
 active_w = 0.15  # m
 active_h = 0.15  # m
 
