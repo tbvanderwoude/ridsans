@@ -73,6 +73,7 @@ sorted_indices = np.argsort(rpm)
 sorted_wavelengths = wavelengths[sorted_indices]
 sorted_rpm = rpm[sorted_indices]
 
+active_w_pixels = 568
 
 # Fits the mapping from RPM to wavelength
 def rpm_to_lambda0(x, a, b):
@@ -83,8 +84,8 @@ popt, _ = curve_fit(rpm_to_lambda0, sorted_rpm, sorted_wavelengths)
 
 rpm_converter = lambda rpm: rpm_to_lambda0(rpm, *popt)
 
-active_w = 0.15  # m
-active_h = 0.15  # m
+active_w = 0.6  # m
+active_h = 0.6  # m
 
 
 class Beamstop:
@@ -109,12 +110,18 @@ class Beamstop:
 
 
 class SansData:
-    def __init__(self, filename, log_process=False):
+    def __init__(self, filename, log_process=False, keep_all_counts=False):
         self.log_process = log_process
+        self.keep_all_counts = keep_all_counts
         self.log(f"=== Loading RIDSANS measurement file: {filename} ===")
         self.filename = filename
         self.load_data(filename)
-        self.pixel_count = 1024 * 1024
+        if keep_all_counts:
+            self.pixel_count = 1024 * 1024
+        else:
+            self.pixel_count = active_w_pixels * active_w_pixels
+        self.log(f"Pixel count: {self.pixel_count}")
+
         # Define the distances based on the provided geometry (in mm)
         self.distances = {
             "D_to_DS": 1320 + 0,  # Distance from diaphragm to sample, + PosFzz
@@ -191,7 +198,15 @@ class SansData:
         cdat2_2d = np.reshape(cdat2, (1024, 1024))
         # Transpose it to switch axes (I assume because it was column-major and needs to be row-major)
         # self.raw_intensity = np.transpose(cdat2_2d)
-        self.raw_intensity = np.flip(cdat2_2d, axis=0)
+
+        if self.keep_all_counts:
+            self.raw_intensity = np.flip(cdat2_2d, axis=0)
+        else:
+            self.pixel_count = active_w_pixels * active_w_pixels
+            # Selects only active detector region pixels (a 568 x 568 region)
+            # TODO: makes this customizable and not hardcoded
+            self.raw_intensity = np.flip(cdat2_2d[233:233+active_w_pixels,233:233+active_w_pixels], axis=0)
+            assert(self.pixel_count == len(self.raw_intensity.flatten()))
 
         # The following extracts the measurement time and total counts from under the [CHN2] header
         r = re.compile("\[CHN\d*\]")
@@ -241,5 +256,5 @@ class SansData:
 
 
 if __name__ == "__main__":
-    sample = SansData("data/memb_BS_Q1_6_0Ang.mpa")
-    bg = SansData("data/08_07_24_backG_1202s_reactor_on.mpa")
+    sample = SansData("data/old-data/memb_BS_Q1_6_0Ang.mpa", log_process=True)
+    bg = SansData("data/old-data/08_07_24_backG_1202s_reactor_on.mpa", log_process=True)
