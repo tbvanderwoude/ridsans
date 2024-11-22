@@ -32,23 +32,23 @@
   <!---->
   <type name="pixel" is="detector">
     <cuboid id="shape">
-      <left-front-bottom-point x="0.000528169014084507" y="-0.000528169014084507" z="0.0"  />
-      <left-front-top-point  x="0.000528169014084507" y="-0.000528169014084507" z="0.000005"  />
-      <left-back-bottom-point  x="-0.000528169014084507" y="-0.000528169014084507" z="0.0"  />
-      <right-front-bottom-point  x="0.000528169014084507" y="0.000528169014084507" z="0.0"  />
+      <left-front-bottom-point x="$HALF_PIXEL_SIZE" y="-$HALF_PIXEL_SIZE" z="0.0"  />
+      <left-front-top-point  x="$HALF_PIXEL_SIZE" y="-$HALF_PIXEL_SIZE" z="0.000005"  />
+      <left-back-bottom-point  x="-$HALF_PIXEL_SIZE" y="-$HALF_PIXEL_SIZE" z="0.0"  />
+      <right-front-bottom-point  x="$HALF_PIXEL_SIZE" y="$HALF_PIXEL_SIZE" z="0.0"  />
     </cuboid>
     <algebra val="shape" />
   </type>
 
   <type name="detector-bank" is="RectangularDetector" type="pixel"
-    xpixels="568" xstart="-0.29947183098591545" xstep="0.001056338028169014"
-    ypixels="568" ystart="-0.29947183098591545" ystep="0.001056338028169014" >
+    xpixels="$DETECTOR_PIXELS_X" xstart="$PIXEL_START_X" xstep="$PIXEL_SIZE"
+    ypixels="$DETECTOR_PIXELS_Y" ystart="$PIXEL_START_Y" ystep="$PIXEL_SIZE" >
   </type>
 
   <!---->
   <!--COMPONENT: 2D square detector bank-->
   <!---->
-  <component type="detector-bank" idstart="0" idfillbyfirst="x" idstep="1" idstepbyrow="568">
+  <component type="detector-bank" idstart="0" idfillbyfirst="x" idstep="1" idstepbyrow="$DETECTOR_PIXELS_Y">
       <location x="0.0" y="0.0" z="0.0"/>
   </component>
 </instrument>
