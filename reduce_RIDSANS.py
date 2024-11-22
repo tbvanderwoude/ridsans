@@ -56,9 +56,7 @@ def reduction_setup_RIDSANS(ws_sample, ws_direct, active_w, active_h, ROI=None):
         RelativePosition=False,
     )
 
-    # STEP 2: apply mask
-    mask_rectangle(ws_sample, active_w, active_h)
-
+    # STEP 2: apply masks
     if ROI is not None:
         # TODO: ensure that choice of circle center is correct
         mask_circle(ws_sample, ROI, True)
@@ -87,7 +85,7 @@ def reduce_RIDSANS_1D(ws_sample, ws_pixel_adj, active_w):
         PixelAdj=ws_pixel_adj,
         SolidAngleWeighting=True,
         OutputBinning=output_binning,
-        AccountForGravity=True,
+        AccountForGravity=False,
     )
     return reduced_ws_1D
 
