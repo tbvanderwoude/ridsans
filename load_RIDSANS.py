@@ -108,9 +108,8 @@ def workspace_from_measurement(
     ) - 1 / T_can * (can_scatter.I - background.I)
     I_0 = np.sum(direct.I)
     return monochromatic_workspace(
-        sample_scatter.filename, I_corrected/I_0, sample_scatter.d, bins, detectors
+        sample_scatter.filename, I_corrected / I_0, sample_scatter.d, bins, detectors
     )
-    
 
 
 def create_monochrom_bin_bounds(L0, delta_L_over_L0=0.1):

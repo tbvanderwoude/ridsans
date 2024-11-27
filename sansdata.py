@@ -75,6 +75,7 @@ sorted_rpm = rpm[sorted_indices]
 
 active_w_pixels = 568
 
+
 # Fits the mapping from RPM to wavelength
 def rpm_to_lambda0(x, a, b):
     return a / x + b
@@ -205,8 +206,11 @@ class SansData:
             self.pixel_count = active_w_pixels * active_w_pixels
             # Selects only active detector region pixels (a 568 x 568 region)
             # TODO: makes this customizable and not hardcoded
-            self.raw_intensity = np.flip(cdat2_2d[233:233+active_w_pixels,233:233+active_w_pixels], axis=0)
-            assert(self.pixel_count == len(self.raw_intensity.flatten()))
+            self.raw_intensity = np.flip(
+                cdat2_2d[233 : 233 + active_w_pixels, 233 : 233 + active_w_pixels],
+                axis=0,
+            )
+            assert self.pixel_count == len(self.raw_intensity.flatten())
 
         # The following extracts the measurement time and total counts from under the [CHN2] header
         r = re.compile("\[CHN\d*\]")
