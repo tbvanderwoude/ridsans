@@ -34,7 +34,7 @@ def mask_circle(ws, r, negative=False, offset_x=0, offset_y=0):
     MaskDetectors(Workspace=ws, SpectraList=mask_list)
 
 
-def reduction_setup_RIDSANS(ws_sample, ws_direct, active_w, active_h, ROI=None):
+def reduction_setup_RIDSANS(ws_sample, ws_direct, active_w, active_h, ROI=None, mask_workspace = None):
     """Finds the beam center and applies a mask"""
     # STEP 1: find beam centre from direct beam
     # Compute the center position, which will be put in a table workspace
@@ -60,6 +60,9 @@ def reduction_setup_RIDSANS(ws_sample, ws_direct, active_w, active_h, ROI=None):
     if ROI is not None:
         # TODO: ensure that choice of circle center is correct
         mask_circle(ws_sample, ROI, True)
+
+    if mask_workspace is not None:
+        MaskDetectors(Workspace=ws_sample, MaskedWorkspace=mask_workspace)
 
 
 def reduce_RIDSANS_1D(ws_sample, ws_pixel_adj, active_w):
