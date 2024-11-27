@@ -54,13 +54,18 @@ def compute_tranmission_factor(sample_transmission, direct):
     return np.sum(sample_transmission.I) / np.sum(direct.I)
 
 
-def monochromatic_workspace(name, I, detector_position, bins, detectors):
+def monochromatic_workspace(name, I, detector_position, bins, detectors, error=None):
     """Creates a monochromatic Mantid workspace from intensity I (can also be counts) together with precomputed bins and a detector position (relative to sample) along beam axis."""
     # Use the same bin for each detector
     x = np.tile(bins, detectors)
 
     ws = CreateWorkspace(
-        OutputWorkspace=name, UnitX="Wavelength", DataX=x, DataY=I, NSpec=detectors
+        OutputWorkspace=name,
+        UnitX="Wavelength",
+        DataX=x,
+        DataY=I,
+        DataE=error,
+        NSpec=detectors,
     )
     mon = LoadInstrument(ws, FileName="RIDSANS_Definition.xml", RewriteSpectraMap=True)
 
@@ -107,8 +112,24 @@ def workspace_from_measurement(
         sample_scatter.I - background.I
     ) - 1 / T_can * (can_scatter.I - background.I)
     I_0 = np.sum(direct.I)
+
+    # Ignore error T_sample, T_can and I_0
+    # TODO: incorperate these errors for more accurate error calculation
+    dI_corrected = (
+        np.sqrt(
+            (sample_scatter.dI**2 + background.dI**2) / (T_sample * T_can)
+            + (can_scatter.dI**2 + background.dI**2) / (T_can)
+        )
+        / I_0
+    )
+
     return monochromatic_workspace(
-        sample_scatter.filename, I_corrected / I_0, sample_scatter.d, bins, detectors
+        sample_scatter.filename,
+        I_corrected / I_0,
+        sample_scatter.d,
+        bins,
+        detectors,
+        error=dI_corrected,
     )
 
 
