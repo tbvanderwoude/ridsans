@@ -34,15 +34,15 @@ def mask_circle(ws, r, negative=False, offset_x=0, offset_y=0):
     MaskDetectors(Workspace=ws, SpectraList=mask_list)
 
 
-def reduction_setup_RIDSANS(ws_sample, ws_direct, active_w, active_h, ROI=None, mask_workspace = None):
+def reduction_setup_RIDSANS(
+    ws_sample, ws_direct, active_w, active_h, ROI=None, mask_workspace=None
+):
     """Finds the beam center and applies a mask"""
     # STEP 1: find beam centre from direct beam
     # Compute the center position, which will be put in a table workspace
 
     # Uses direct beam method
-    center = FindCenterOfMassPosition(
-        ws_direct, Output="center", Tolerance=0.0005
-    )
+    center = FindCenterOfMassPosition(ws_direct, Output="center", Tolerance=0.0005)
     center_x, center_y = center.column(1)
     print(f"(x, y) = ({center_x:.4f}, {center_y:.4f})")
     # Idea: move detector based on beamstop position to compensate for shift
@@ -65,8 +65,8 @@ def reduction_setup_RIDSANS(ws_sample, ws_direct, active_w, active_h, ROI=None, 
         MaskDetectors(Workspace=ws_sample, MaskedWorkspace=mask_workspace)
 
 
-def reduce_RIDSANS_1D(ws_sample, ws_pixel_adj, active_w):
-    """Performs a 1D reduction of the measurement. This assumes reduction_setup_RIDSANS has been run before."""
+def reduce_RIDSANS_1D(ws_sample, ws_pixel_adj, active_w, output_workspace=None):
+    """Performs a 1D reduction of the measurement. This assumes reduction_setup_RIDSANS has been run before. The resulting workspace represe nts the macroscopic cross-section over sample thickness t."""
     # Directly get the sample position
     sample_position = ws_sample.getInstrument().getSample().getPos()
 
@@ -83,8 +83,12 @@ def reduce_RIDSANS_1D(ws_sample, ws_pixel_adj, active_w):
     Q_max = 4 * np.pi / L0 * np.sin(np.arctan(r / (ds_dist)) / 2)
     Q_max  # AA-1
     output_binning = np.linspace(0, Q_max, 201)
+    name = ws_sample.name() + "_Sigma/t_1D"
+    if output_workspace is not None:
+        name = output_workspace
     reduced_ws_1D = Q1D(
         ws_sample,
+        OutputWorkspace=name,
         PixelAdj=ws_pixel_adj,
         SolidAngleWeighting=True,
         OutputBinning=output_binning,
@@ -93,8 +97,8 @@ def reduce_RIDSANS_1D(ws_sample, ws_pixel_adj, active_w):
     return reduced_ws_1D
 
 
-def reduce_RIDSANS_2D(ws_sample, ws_pixel_adj, active_w):
-    """Performs a 1D reduction of the measurement. This assumes reduction_setup_RIDSANS has been run before."""
+def reduce_RIDSANS_2D(ws_sample, ws_pixel_adj, active_w, output_workspace=None):
+    """Performs a 1D reduction of the measurement. This assumes reduction_setup_RIDSANS has been run before. The resulting workspace represe nts the macroscopic cross-section over sample thickness t."""
 
     # Directly get the sample position
     sample_position = ws_sample.getInstrument().getSample().getPos()
@@ -112,13 +116,17 @@ def reduce_RIDSANS_2D(ws_sample, ws_pixel_adj, active_w):
     delta_Q = 0.0001 * 2
     # max_QXY = 0.01
     # N_Q_bins = int(np.floor(2*Q_max/delta_Q)+2)
+    name = ws_sample.name() + "_Sigma/t_2D"
+    if output_workspace is not None:
+        name = output_workspace
 
     reduced_ws_2D = Qxy(
         ws_sample,
+        OutputWorkspace=name,
         PixelAdj=ws_pixel_adj,
         SolidAngleWeighting=True,
         MaxQxy=Q_max,
         DeltaQ=delta_Q,
-        AccountForGravity=True,
+        AccountForGravity=False,
     )
     return reduced_ws_2D
