@@ -2,7 +2,7 @@ from mantid.simpleapi import *
 from mantid.api import *
 from mantid.kernel import *
 import numpy as np
-
+from sansdata import active_w, active_h
 
 def mask_rectangle(ws, w, h, negative=False, offset_x=0, offset_y=0):
     # Gets large for a 1024 x 1024 detector but at most ~30 MB
@@ -35,7 +35,7 @@ def mask_circle(ws, r, negative=False, offset_x=0, offset_y=0):
 
 
 def reduction_setup_RIDSANS(
-    ws_sample, ws_direct, active_w, active_h, ROI=None, mask_workspace=None
+    ws_sample, ws_direct, ROI=None, mask_workspace=None
 ):
     """Finds the beam center and applies a mask"""
     # STEP 1: find beam centre from direct beam
@@ -65,7 +65,7 @@ def reduction_setup_RIDSANS(
         MaskDetectors(Workspace=ws_sample, MaskedWorkspace=mask_workspace)
 
 
-def reduce_RIDSANS_1D(ws_sample, ws_pixel_adj, active_w, output_workspace=None):
+def reduce_RIDSANS_1D(ws_sample, ws_pixel_adj, output_workspace=None):
     """Performs a 1D reduction of the measurement. This assumes reduction_setup_RIDSANS has been run before. The resulting workspace represe nts the macroscopic cross-section over sample thickness t."""
     # Directly get the sample position
     sample_position = ws_sample.getInstrument().getSample().getPos()
@@ -97,7 +97,7 @@ def reduce_RIDSANS_1D(ws_sample, ws_pixel_adj, active_w, output_workspace=None):
     return reduced_ws_1D
 
 
-def reduce_RIDSANS_2D(ws_sample, ws_pixel_adj, active_w, output_workspace=None):
+def reduce_RIDSANS_2D(ws_sample, ws_pixel_adj, output_workspace=None):
     """Performs a 1D reduction of the measurement. This assumes reduction_setup_RIDSANS has been run before. The resulting workspace represe nts the macroscopic cross-section over sample thickness t."""
 
     # Directly get the sample position
