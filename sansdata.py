@@ -4,6 +4,7 @@ import matplotlib.colors as mcolors
 from scipy.optimize import curve_fit
 from math import pi as pi
 import re
+from pathlib import Path
 
 
 def plot_I(I, plot_centre_cross=True):
@@ -116,6 +117,7 @@ class SansData:
         self.keep_all_counts = keep_all_counts
         self.log(f"=== Loading RIDSANS measurement file: {filename} ===")
         self.filename = filename
+        self.name = Path(filename).stem
         self.load_data(filename)
         if keep_all_counts:
             self.pixel_count = 1024 * 1024

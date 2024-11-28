@@ -82,7 +82,7 @@ def monochromatic_workspace(name, I, detector_position, bins, detectors, error=N
 
 def workspace_from_sansdata(sansdata, bins, detectors):
     return monochromatic_workspace(
-        sansdata.filename, sansdata.I, sansdata.d, bins, detectors
+        sansdata.name, sansdata.I, sansdata.d, bins, detectors
     )
 
 
@@ -152,7 +152,7 @@ def workspace_from_measurement(
         )
 
     return monochromatic_workspace(
-        sample_scatter.filename,
+        sample_scatter.name,
         I_corrected,
         sample_scatter.d,
         bins,
