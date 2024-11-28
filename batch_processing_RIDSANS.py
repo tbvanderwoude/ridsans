@@ -5,9 +5,17 @@ from mantid.api import AnalysisDataService as ADS
 
 
 def load_batchfile_index_workspaces(
-    index, efficiency_file, batch_filename="sans-batchfile.csv", directory="data"
+    index,
+    efficiency_file,
+    batch_filename="sans-batchfile.csv",
+    directory="data",
+    force_reload=False,
 ):
+    """Get needed workspaces for reduction, retrieving these from the AnalysisDataService if available and force_reload is not set."""
     try:
+        # Emulate absent workspace when force_reload is set
+        if force_reload:
+            raise KeyError("force_reload is set")
         return retrieve_batchfile_index_workspaces(index, batch_filename, directory)
     except KeyError:
         (
