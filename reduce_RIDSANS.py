@@ -4,6 +4,7 @@ from mantid.kernel import *
 import numpy as np
 from sansdata import active_w, active_h
 
+
 def mask_rectangle(ws, w, h, negative=False, offset_x=0, offset_y=0):
     # Gets large for a 1024 x 1024 detector but at most ~30 MB
     mask_list = []
@@ -34,9 +35,7 @@ def mask_circle(ws, r, negative=False, offset_x=0, offset_y=0):
     MaskDetectors(Workspace=ws, SpectraList=mask_list)
 
 
-def reduction_setup_RIDSANS(
-    ws_sample, ws_direct, ROI=None, mask_workspace=None
-):
+def reduction_setup_RIDSANS(ws_sample, ws_direct, ROI=None, mask_workspace=None):
     """Finds the beam center and applies a mask"""
     # STEP 1: find beam centre from direct beam
     # Compute the center position, which will be put in a table workspace
