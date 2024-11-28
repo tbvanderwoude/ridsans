@@ -1,0 +1,13 @@
+sample scatter,sample trans,can scatter,can trans,direct,background
+sample1_Q1,sample_transmission_Q1,sample_empty_cuvette_Q1,,no_cuvette_transmission_Q1,old-data/09_07_24_backG_3600s_reactor_on_Fish_on.mpa
+sample1_Q2,sample_transmission_Q2,sample_empty_cuvette_Q2,,no_cuvette_transmission_Q2,old-data/09_07_24_backG_3600s_reactor_on_Fish_on.mpa
+sample1_Q3,sample_transmission_Q3,sample_empty_cuvette_Q3,,no_cuvette_transmission_Q3,old-data/09_07_24_backG_3600s_reactor_on_Fish_on.mpa
+sample1_Q4,sample_transmission_Q4,sample_empty_cuvette_Q4,,no_cuvette_transmission_Q4,old-data/09_07_24_backG_3600s_reactor_on_Fish_on.mpa
+samples_glassyC_0-5mm_QR1_6_0Ang,Glassy_Q1,,,empty_Q1,old-data/09_07_24_backG_3600s_reactor_on_Fish_on.mpa
+samples_glassyC_0-5mm_QR2_6_0Ang,Glassy_Q2,,,empty_Q2,old-data/09_07_24_backG_3600s_reactor_on_Fish_on.mpa
+samples_glassyC_0-5mm_QR3_6_0Ang,Glassy_Q3,,,empty_Q3,old-data/09_07_24_backG_3600s_reactor_on_Fish_on.mpa
+samples_glassyC_0-5mm_QR4_6_0Ang,Glassy_Q4,,,empty_Q4,old-data/09_07_24_backG_3600s_reactor_on_Fish_on.mpa
+samples_nanoC_0-5mm_QR1_6_0Ang,nano_Q1,,,empty_Q1,old-data/09_07_24_backG_3600s_reactor_on_Fish_on.mpa
+samples_nanoC_0-5mm_QR2_6_0Ang,nano_Q2,,,empty_Q2,old-data/09_07_24_backG_3600s_reactor_on_Fish_on.mpa
+samples_nanoC_0-5mm_QR3_6_0Ang,nano_Q3,,,empty_Q3,old-data/09_07_24_backG_3600s_reactor_on_Fish_on.mpa
+samples_nanoC_0-5mm_QR4_6_0Ang,nano_Q4,,,empty_Q4,old-data/09_07_24_backG_3600s_reactor_on_Fish_on.mpa
