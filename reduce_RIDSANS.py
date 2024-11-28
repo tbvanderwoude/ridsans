@@ -79,8 +79,7 @@ def reduce_RIDSANS_1D(ws_sample, ws_pixel_adj, output_workspace=None):
     # max_det_y = 0.140662/2
     ds_dist = -sample_position.Z()
     r = active_w / 2
-    Q_max = 4 * np.pi / L0 * np.sin(np.arctan(r / (ds_dist)) / 2)
-    Q_max  # AA-1
+    Q_max = 4 * np.pi / L0 * np.sin(np.arctan(r / (ds_dist)) / 2)  # AA-1
     output_binning = np.linspace(0, Q_max, 201)
     name = ws_sample.name() + "_Sigma/t_1D"
     if output_workspace is not None:
@@ -91,7 +90,7 @@ def reduce_RIDSANS_1D(ws_sample, ws_pixel_adj, output_workspace=None):
         PixelAdj=ws_pixel_adj,
         SolidAngleWeighting=True,
         OutputBinning=output_binning,
-        AccountForGravity=False,
+        AccountForGravity=True,
     )
     return reduced_ws_1D
 
@@ -112,7 +111,7 @@ def reduce_RIDSANS_2D(ws_sample, ws_pixel_adj, output_workspace=None):
     r = active_w / 2
     Q_max = 4 * np.pi / L0 * np.sin(np.arctan(r / (ds_dist)) / 2)
     Q_max  # AA-1
-    delta_Q = 0.0001 * 2
+    delta_Q = Q_max / 100
     # max_QXY = 0.01
     # N_Q_bins = int(np.floor(2*Q_max/delta_Q)+2)
     name = ws_sample.name() + "_Sigma/t_2D"
@@ -126,6 +125,6 @@ def reduce_RIDSANS_2D(ws_sample, ws_pixel_adj, output_workspace=None):
         SolidAngleWeighting=True,
         MaxQxy=Q_max,
         DeltaQ=delta_Q,
-        AccountForGravity=False,
+        AccountForGravity=True,
     )
     return reduced_ws_2D
