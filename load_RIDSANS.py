@@ -5,32 +5,30 @@ from sansdata import *
 from multiprocessing import Pool
 
 
+# A map on an Option type conceptually
+def option_map(file_name):
+    if file_name is not None:
+        return SansData(str(file_name))
+    else:
+        return None
+
+
 def load_measurement_files(
-    sample_scatter_file,
-    sample_transmission_file,
-    can_scatter_file,
-    direct_file,
-    background_file,
+    file_list,
     plot_measurements=False,
 ):
     """Loads all needed measurement files as SansData objects and plots these if plot_measurements is set. Uses a multiprocessing pool to speed up loading of files."""
+
     with Pool(5) as p:
-        sample_scatter, sample_transmission, can_scatter, direct, background = p.map(
-            SansData,
-            [
-                sample_scatter_file,
-                sample_transmission_file,
-                can_scatter_file,
-                direct_file,
-                background_file,
-            ],
+        loaded_list = p.map(
+            option_map,
+            file_list,
         )
     if plot_measurements:
-        sample_scatter.plot_2d(True)
-        sample_transmission.plot_2d(True)
-        can_scatter.plot_2d(True)
-        direct.plot_2d(True)
-    return sample_scatter, sample_transmission, can_scatter, direct, background
+        for x in loaded_list:
+            if x is not None:
+                x.plot_2d(True)
+    return loaded_list
 
 
 def create_pixel_adj_workspace(pixel_efficiencies, bins, detectors):
@@ -48,7 +46,7 @@ def create_pixel_adj_workspace(pixel_efficiencies, bins, detectors):
     return pixel_adj
 
 
-def compute_tranmission_factor(sample_transmission, direct):
+def compute_transmission_factor(sample_transmission, direct):
     """Compute tranmission factor assuming that the same attenuator is used, needs to be adjusted otherwise."""
     # TODO: Consider ROI for more accurate tranmission estimate (less noise)
     return np.sum(sample_transmission.I) / np.sum(direct.I)
@@ -92,6 +90,7 @@ def workspace_from_measurement(
     sample_scatter,
     sample_transmission,
     can_scatter,
+    can_transmission,
     direct,
     background,
     bins,
@@ -99,33 +98,62 @@ def workspace_from_measurement(
 ):
     """Creates a workspace with scaled intensity in counts/s"""
     # Sample transmission factor
-    T_sample = compute_tranmission_factor(sample_transmission, direct)
+    T_sample = compute_transmission_factor(sample_transmission, direct)
     # Can (container) transmission factor
     T_can = (
         1.0  # Ideally to be computed from can_transmission measurement, not present?
     )
 
-    print(f"Transmission factor: T_sample = {T_sample}")
+    # If can transmission measurement is included
+    if can_transmission is not None:
+        T_can = compute_transmission_factor(can_transmission, direct)
+
+    print(f"Transmission factors: T_sample = {T_sample}; T_can = {T_can}")
 
     # Corrected intensity considering background and tranmission factors of sample and can.
-    I_corrected = 1 / (T_sample * T_can) * (
-        sample_scatter.I - background.I
-    ) - 1 / T_can * (can_scatter.I - background.I)
     I_0 = np.sum(direct.I)
 
-    # Ignore error T_sample, T_can and I_0
-    # TODO: incorperate these errors for more accurate error calculation
-    dI_corrected = (
-        np.sqrt(
-            (sample_scatter.dI**2 + background.dI**2) / (T_sample * T_can)
-            + (can_scatter.dI**2 + background.dI**2) / (T_can)
+    if can_scatter is not None:
+        # A can is used
+        if can_transmission is not None:
+            I_corrected = (
+                1 / (T_sample * T_can) * (sample_scatter.I - background.I)
+                - 1 / T_can * (can_scatter.I - background.I)
+            ) / I_0
+
+            # Ignore error T_sample, T_can and I_0
+            # TODO: incorperate these errors for more accurate error calculation
+            # TODO: correct formula as background contributions here are correlated and not independent
+            dI_corrected = (
+                np.sqrt(
+                    (sample_scatter.dI**2 + background.dI**2) / (T_sample * T_can) ** 2
+                    + (can_scatter.dI**2 + background.dI**2) / (T_can) ** 2
+                )
+                / I_0
+            )
+        else:
+            # Per the formula, when the same transmission is used for sample and can scattering,
+            # the background cancels... Feels dubious
+            # TODO: verify this is allowed
+            I_corrected = (1 / T_sample * (sample_scatter.I - can_scatter.I)) / I_0
+
+            # Ignore error T_sample, T_can and I_0
+            # TODO: incorperate these errors for more accurate error calculation
+            dI_corrected = (
+                np.sqrt((sample_scatter.dI**2 + can_scatter.dI**2) / T_sample**2) / I_0
+            )
+    else:
+        # Assume no can is used as when using solid samples, crystals etc. or that its effect is ignored
+        I_corrected = 1 / T_sample * (sample_scatter.I - background.I) / I_0
+
+        # Ignore error T_sample and I_0
+        dI_corrected = (
+            np.sqrt((sample_scatter.dI**2 + background.dI**2) / (T_sample)) / I_0
         )
-        / I_0
-    )
 
     return monochromatic_workspace(
         sample_scatter.filename,
-        I_corrected / I_0,
+        I_corrected,
         sample_scatter.d,
         bins,
         detectors,
@@ -144,6 +172,7 @@ def load_RIDSANS_from_sansdata(
     sample_scatter,
     sample_transmission,
     can_scatter,
+    can_transmission,
     direct,
     background,
     relative_pixel_efficiency,
@@ -155,6 +184,7 @@ def load_RIDSANS_from_sansdata(
         sample_scatter,
         sample_transmission,
         can_scatter,
+        can_transmission,
         direct,
         background,
         bins,
@@ -168,28 +198,42 @@ def load_RIDSANS(
     sample_scatter_file,
     sample_transmission_file,
     can_scatter_file,
+    can_transmission_file,
     direct_file,
     background_file,
     efficiency_file,
 ):
     """Loads a RIDSANS measurement into a sample workspace (with corrected intensity),
     a direct measurement workspace for beam centre finding and a pixel adjustment workspace.
+
+    Supports three variants of inputs:
+    - A sample scatter and transmission (for samples that don't need a container)
+    - A sample scatter and transmission and can scatter (neglects can transmission)
+    - A sample and can scatter and transmission to make calculation of sample and can transmission factors possible
     """
     print("Starting load_RIDSANS")
     relative_pixel_efficiency = np.loadtxt(efficiency_file)
-    sample_scatter, sample_transmission, can_scatter, direct, background = (
-        load_measurement_files(
-            sample_scatter_file,
-            sample_transmission_file,
-            can_scatter_file,
-            direct_file,
-            background_file,
-        )
-    )
+    file_list = [
+        sample_scatter_file,
+        sample_transmission_file,
+        can_scatter_file,
+        can_transmission_file,
+        direct_file,
+        background_file,
+    ]
+    (
+        sample_scatter,
+        sample_transmission,
+        can_scatter,
+        can_transmission,
+        direct,
+        background,
+    ) = load_measurement_files(file_list)
     ws_sample, ws_direct, mon, ws_pixel_adj = load_RIDSANS_from_sansdata(
         sample_scatter,
         sample_transmission,
         can_scatter,
+        can_transmission,
         direct,
         background,
         relative_pixel_efficiency,
