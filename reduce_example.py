@@ -3,8 +3,8 @@ from mantid.api import AnalysisDataService as ADS
 
 i = 3
 
-ws_sample = ADS.retrieve(f"data/sample1_Q{i}.mpa")
-ws_direct = ADS.retrieve(f"data/no_cuvette_transmission_Q{i}.mpa")
+ws_sample = ADS.retrieve(f"sample1_Q{i}")
+ws_direct = ADS.retrieve(f"no_cuvette_transmission_Q{i}")
 # mask_workspace = ADS.retrieve("MaskWorkspace")
 ws_pixel_adj = ADS.retrieve("PixelAdj")
 
