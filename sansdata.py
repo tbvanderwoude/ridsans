@@ -14,7 +14,7 @@ def plot_I(I, plot_centre_cross=True):
     norm = mcolors.LogNorm(vmin=np.min(I[I > 0]), vmax=np.max(I))
     plt.figure()
 
-    extent = [0, 1024, 0, 1024]
+    extent = [233, 233 + active_w_pixels, 233, 233 + active_w_pixels]
     plt.imshow(
         I, cmap="viridis", extent=extent, norm=norm, aspect="auto"
     )  # cmap defines the color map (optional)
