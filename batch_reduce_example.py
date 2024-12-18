@@ -3,9 +3,9 @@ from reduce_RIDSANS import *
 from mantid.api import AnalysisDataService as ADS
 
 # mask_workspace = ADS.retrieve('MaskWorkspace')
-for index in range(0, 4):
+for index in range(4,8):
     ws_sample, ws_direct, mon, ws_pixel_adj = load_batchfile_index_workspaces(
-        index, "pixel-efficiency.txt.gz", "sans-batchfile.csv"
+        index, "pixel-efficiency.txt.gz", "sans-batchfile.csv", directory = "sample-data"
     )
     print(index, ws_sample.name())
     
