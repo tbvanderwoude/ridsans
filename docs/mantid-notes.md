@@ -29,3 +29,7 @@ The general structure used by GPSANS is to map each pixel (and monitor) to a det
 
 ## 4. Instruments and XML definition files
 Instruments can be loaded into a Workspace using [LoadInstrument](https://docs.mantidproject.org/v6.6.0/algorithms/LoadInstrument-v1.html). You can load custom instrument definitions defined in a [InstrumentDefinitionFile](https://docs.mantidproject.org/v6.6.0/concepts/InstrumentDefinitionFile.html#instrumentdefinitionfile) XML format. A [guide for creating IDFs](https://docs.mantidproject.org/v6.6.0/concepts/CreateanIDF.html#create-an-idf) is available, as is an [annotated example](https://docs.mantidproject.org/v6.6.0/concepts/SANS2DSampleIDF.html#sans2d-sample-idf) of a basic 2D sans instrument (SANS2D)
+
+## 5. How to apply masks to Workspaces
+
+https://docs.mantidproject.org/nightly/tutorials/mantid_basic_course/connecting_data_to_instruments/08_exercises_c.html
