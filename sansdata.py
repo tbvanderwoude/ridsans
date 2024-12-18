@@ -6,60 +6,8 @@ from math import pi as pi
 import re
 from pathlib import Path
 
-
-def plot_I(I, plot_centre_cross=True):
-    """
-    Plot the 2D intensity data.
-    """
-    norm = mcolors.LogNorm(vmin=np.min(I[I > 0]), vmax=np.max(I))
-    plt.figure()
-
-    extent = [233, 233 + active_w_pixels, 233, 233 + active_w_pixels]
-    plt.imshow(
-        I, cmap="viridis", extent=extent, norm=norm, aspect="auto"
-    )  # cmap defines the color map (optional)
-    plt.colorbar(label="I")
-    plt.xlabel("Pixel X")
-    plt.ylabel("Pixel Y")
-    if plot_centre_cross:
-        plt.axvline(512, linestyle="--", color="red")
-        plt.axhline(512, linestyle="--", color="red")
-    plt.show()
-
-
-def plot_projections(I):
-    """
-    Plot combined integrated intensities along both X and Y axes with both pixel and distance representations.
-    """
-    fig, axes = plt.subplots(
-        2, 1, figsize=(12, 12)
-    )  # Arrange plots in 2 rows, 1 column
-
-    # Plot integrated intensity along X-axis (summed over Y) in pixels
-    integrated_intensity_x = np.sum(I, axis=0)
-    integrated_intensity_y = np.sum(I, axis=1)
-
-    ax = axes[0]
-    x_values_pixels = np.arange(integrated_intensity_x.size)
-    ax.plot(x_values_pixels, integrated_intensity_x)
-
-    ax.set_title("Intensity integrated over y-axis")
-    ax.set_xlabel("$x$ (pixels)")
-    ax.set_ylabel(r"$I(x)$")
-    ax.legend()
-
-    ax = axes[1]
-    y_values_pixels = np.arange(integrated_intensity_y.size)
-    ax.plot(y_values_pixels, integrated_intensity_y)
-
-    ax.set_title("Intensity integrated over x-axis")
-    ax.set_xlabel(r"$y$ (pixels)")
-    ax.set_ylabel(r"$I(y)$")
-    ax.legend()
-
-    plt.tight_layout()
-    plt.show()
-
+active_w_pixels = 568
+cropped_extent = [233, 233 + active_w_pixels, 233, 233 + active_w_pixels]
 
 # The numbers represent FZZ in the 4 sample positions
 # This is needed because FZZ is not always present in the .mpa files
@@ -74,7 +22,6 @@ sorted_indices = np.argsort(rpm)
 sorted_wavelengths = wavelengths[sorted_indices]
 sorted_rpm = rpm[sorted_indices]
 
-active_w_pixels = 568
 
 
 # Fits the mapping from RPM to wavelength
@@ -89,6 +36,61 @@ rpm_converter = lambda rpm: rpm_to_lambda0(rpm, *popt)
 active_w = 0.6  # m
 active_h = 0.6  # m
 
+
+def plot_I(I, plot_centre_cross=True,extent=cropped_extent):
+    """
+    Plot the 2D intensity data.
+    """
+    norm = mcolors.LogNorm(vmin=np.min(I[I > 0]), vmax=np.max(I))
+    plt.figure()
+
+    # extent = [233, 233 + active_w_pixels, 233, 233 + active_w_pixels]
+    
+    plt.imshow(
+        I, cmap="viridis", extent=extent, norm=norm, aspect="auto"
+    )  # cmap defines the color map (optional)
+    plt.colorbar(label="I")
+    plt.xlabel("Pixel X")
+    plt.ylabel("Pixel Y")
+    if plot_centre_cross:
+        plt.axvline(512, linestyle="--", color="red")
+        plt.axhline(512, linestyle="--", color="red")
+    plt.show()
+
+
+def plot_projections(I,extent=cropped_extent):
+    """
+    Plot combined integrated intensities along both X and Y axes with both pixel and distance representations.
+    """
+    fig, axes = plt.subplots(
+        2, 1, figsize=(12, 12)
+    )  # Arrange plots in 2 rows, 1 column
+    print(extent)
+    # Plot integrated intensity along X-axis (summed over Y) in pixels
+    integrated_intensity_x = np.sum(I, axis=0)
+    integrated_intensity_y = np.sum(I, axis=1)
+
+    ax = axes[0]
+    x_values_pixels = np.arange(integrated_intensity_x.size)+extent[0]
+    ax.plot(x_values_pixels, integrated_intensity_x)
+    ax.set_xlim(extent[0],extent[1])
+
+    ax.set_title("Intensity integrated over y-axis")
+    ax.set_xlabel("$x$ (pixels)")
+    ax.set_ylabel(r"$I(x)$")
+    ax.legend()
+
+    ax = axes[1]
+    y_values_pixels = np.arange(integrated_intensity_y.size)+extent[2]
+    ax.plot(y_values_pixels, integrated_intensity_y)
+    ax.set_xlim(extent[2],extent[3])
+    ax.set_title("Intensity integrated over x-axis")
+    ax.set_xlabel(r"$y$ (pixels)")
+    ax.set_ylabel(r"$I(y)$")
+    ax.legend()
+
+    plt.tight_layout()
+    plt.show()
 
 class Beamstop:
     def __init__(self, large_x, small_x, y):
@@ -112,9 +114,10 @@ class Beamstop:
 
 
 class SansData:
-    def __init__(self, filename, log_process=False, keep_all_counts=False):
+    def __init__(self, filename, log_process=False, keep_all_counts=False, image_code="CDAT2"):
         self.log_process = log_process
         self.keep_all_counts = keep_all_counts
+        self.image_code = image_code
         self.log(f"=== Loading RIDSANS measurement file: {filename} ===")
         self.filename = filename
         self.name = Path(filename).stem
@@ -187,29 +190,29 @@ class SansData:
         data_start = None
         CDAT2_offset = None
         CDAT2_length = 1048576  # 1024 x 1024
+
         for line, sequence_header in sequence_headers:
             (id, length) = re.findall(r"\[([0-9a-zA-Z]+),(\d+) \]", sequence_header)[0]
             if id == "TDAT0":
                 data_start = line
-            if id == "CDAT2":
+            if id == self.image_code:
                 CDAT2_offset = line
                 assert int(length) == CDAT2_length
         cdat2 = np.array(
             lines[CDAT2_offset + 1 : CDAT2_offset + 1 + CDAT2_length], dtype=np.int16
         )
         # Reshape 1D 1048576 array to 2D 1024 x 1024
-        cdat2_2d = np.reshape(cdat2, (1024, 1024))
+        cdat_2d = np.reshape(cdat2, (1024, 1024))
         # Transpose it to switch axes (I assume because it was column-major and needs to be row-major)
         # self.raw_intensity = np.transpose(cdat2_2d)
-
         if self.keep_all_counts:
-            self.raw_intensity = np.flip(cdat2_2d, axis=0)
+            self.raw_intensity = np.flip(cdat_2d, axis=0)
         else:
             self.pixel_count = active_w_pixels * active_w_pixels
             # Selects only active detector region pixels (a 568 x 568 region)
             # TODO: makes this customizable and not hardcoded
             self.raw_intensity = np.flip(
-                cdat2_2d[233 : 233 + active_w_pixels, 233 : 233 + active_w_pixels],
+                cdat_2d[233 : 233 + active_w_pixels, 233 : 233 + active_w_pixels],
                 axis=0,
             )
             assert self.pixel_count == len(self.raw_intensity.flatten())
@@ -255,10 +258,16 @@ class SansData:
     def plot_integrated_intensity(
         self, intensity=None, axis=0, title="Integrated Intensity", filename=None
     ):
-        plot_projections(self.I)
+        extent = cropped_extent
+        if self.keep_all_counts:
+            extent = [0,1024,0,1024]
+        plot_projections(self.I,extent)
 
     def plot_2d(self, plot_centre_cross=True):
-        plot_I(self.I, plot_centre_cross)
+        extent = cropped_extent
+        if self.keep_all_counts:
+            extent = [0,1024,0,1024]
+        plot_I(self.I, plot_centre_cross,extent)
 
 
 if __name__ == "__main__":
