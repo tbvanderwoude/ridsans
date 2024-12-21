@@ -11,7 +11,6 @@ cropped_extent = [233, 233 + active_w_pixels, 233, 233 + active_w_pixels]
 
 # The numbers represent FZZ in the 4 sample positions
 # This is needed because FZZ is not always present in the .mpa files
-# Why do you ask? I wish I knew
 FZZ_map = {"Q1": 9742.34272, "Q2": 7427.9968, "Q3": 3422.98528, "Q4": 1432.00036}
 
 rpm = np.array(
