@@ -9,7 +9,7 @@ def parse_requirements(filename):
 
 setup(
     name="ridsans",
-    version="0.0.1",
+    version="0.1.0",
     author="Thom van der Woude",
     author_email="tbvanderwoude@protonmail.com",
     description="A data reduction package for SANS measurements done at the Reactor Institute Delft using Mantid.",
