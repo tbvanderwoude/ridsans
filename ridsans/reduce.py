@@ -2,7 +2,7 @@ from mantid.simpleapi import *
 from mantid.api import *
 from mantid.kernel import *
 import numpy as np
-from sansdata import active_w, active_h
+from ridsans.sansdata import active_w, active_h
 
 
 def mask_rectangle(ws, w, h, negative=False, offset_x=0, offset_y=0):

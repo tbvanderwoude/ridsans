@@ -1,7 +1,7 @@
 from mantid.simpleapi import *
 from mantid.api import *
 from mantid.kernel import *
-from sansdata import *
+from ridsans.sansdata import *
 from multiprocessing import Pool
 
 

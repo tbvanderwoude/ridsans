@@ -1,6 +1,6 @@
 import pandas as pd
 from pathlib import Path
-from load_RIDSANS import *
+from ridsans.load import *
 from mantid.api import AnalysisDataService as ADS
 
 
