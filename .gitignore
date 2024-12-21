@@ -1,4 +1,6 @@
 data/
+workshop-data/
+sample-data/
 .conda
 *.nxs
 __pycache__/
