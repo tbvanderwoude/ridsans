@@ -22,7 +22,6 @@ sorted_wavelengths = wavelengths[sorted_indices]
 sorted_rpm = rpm[sorted_indices]
 
 
-
 # Fits the mapping from RPM to wavelength
 def rpm_to_lambda0(x, a, b):
     return a / x + b
@@ -36,7 +35,7 @@ active_w = 0.6  # m
 active_h = 0.6  # m
 
 
-def plot_I(I, plot_centre_cross=True,extent=cropped_extent):
+def plot_I(I, plot_centre_cross=True, extent=cropped_extent):
     """
     Plot the 2D intensity data.
     """
@@ -44,7 +43,7 @@ def plot_I(I, plot_centre_cross=True,extent=cropped_extent):
     plt.figure()
 
     # extent = [233, 233 + active_w_pixels, 233, 233 + active_w_pixels]
-    
+
     plt.imshow(
         I, cmap="viridis", extent=extent, norm=norm, aspect="auto"
     )  # cmap defines the color map (optional)
@@ -57,7 +56,7 @@ def plot_I(I, plot_centre_cross=True,extent=cropped_extent):
     plt.show()
 
 
-def plot_projections(I,extent=cropped_extent):
+def plot_projections(I, extent=cropped_extent):
     """
     Plot combined integrated intensities along both X and Y axes with both pixel and distance representations.
     """
@@ -70,9 +69,9 @@ def plot_projections(I,extent=cropped_extent):
     integrated_intensity_y = np.sum(I, axis=1)
 
     ax = axes[0]
-    x_values_pixels = np.arange(integrated_intensity_x.size)+extent[0]
+    x_values_pixels = np.arange(integrated_intensity_x.size) + extent[0]
     ax.plot(x_values_pixels, integrated_intensity_x)
-    ax.set_xlim(extent[0],extent[1])
+    ax.set_xlim(extent[0], extent[1])
 
     ax.set_title("Intensity integrated over y-axis")
     ax.set_xlabel("$x$ (pixels)")
@@ -80,9 +79,9 @@ def plot_projections(I,extent=cropped_extent):
     ax.legend()
 
     ax = axes[1]
-    y_values_pixels = np.arange(integrated_intensity_y.size)+extent[2]
+    y_values_pixels = np.arange(integrated_intensity_y.size) + extent[2]
     ax.plot(y_values_pixels, integrated_intensity_y)
-    ax.set_xlim(extent[2],extent[3])
+    ax.set_xlim(extent[2], extent[3])
     ax.set_title("Intensity integrated over x-axis")
     ax.set_xlabel(r"$y$ (pixels)")
     ax.set_ylabel(r"$I(y)$")
@@ -90,6 +89,7 @@ def plot_projections(I,extent=cropped_extent):
 
     plt.tight_layout()
     plt.show()
+
 
 class Beamstop:
     def __init__(self, large_x, small_x, y):
@@ -113,7 +113,9 @@ class Beamstop:
 
 
 class SansData:
-    def __init__(self, filename, log_process=False, keep_all_counts=False, image_code="CDAT2"):
+    def __init__(
+        self, filename, log_process=False, keep_all_counts=False, image_code="CDAT2"
+    ):
         self.log_process = log_process
         self.keep_all_counts = keep_all_counts
         self.image_code = image_code
@@ -259,14 +261,14 @@ class SansData:
     ):
         extent = cropped_extent
         if self.keep_all_counts:
-            extent = [0,1024,0,1024]
-        plot_projections(self.I,extent)
+            extent = [0, 1024, 0, 1024]
+        plot_projections(self.I, extent)
 
     def plot_2d(self, plot_centre_cross=True):
         extent = cropped_extent
         if self.keep_all_counts:
-            extent = [0,1024,0,1024]
-        plot_I(self.I, plot_centre_cross,extent)
+            extent = [0, 1024, 0, 1024]
+        plot_I(self.I, plot_centre_cross, extent)
 
 
 if __name__ == "__main__":
