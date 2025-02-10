@@ -1,4 +1,4 @@
-from ridsans.reduce_RIDSANS import *
+from ridsans.reduce import *
 from mantid.api import AnalysisDataService as ADS
 
 i = 3

@@ -1,4 +1,4 @@
-from ridsans.load_RIDSANS import *
+from ridsans.load import *
 
 i = 3
 sample_scatter_file = f"sample-data/Niels_sample1_Q{i}.mpa"
