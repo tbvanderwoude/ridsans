@@ -116,6 +116,7 @@ class SansData:
     def __init__(
         self, filename, log_process=False, keep_all_counts=False, image_code="CDAT2"
     ):
+        self.monitor_value = None
         self.log_process = log_process
         self.keep_all_counts = keep_all_counts
         self.image_code = image_code
@@ -148,6 +149,7 @@ class SansData:
         with open(filename) as f:
             lines = list(f)
         self.filename = filename
+        self.load_scaler_a(lines)
 
         # https://stackoverflow.com/questions/2361426/get-the-first-item-from-an-iterable-that-matches-a-condition
         header_end = next(
@@ -232,9 +234,27 @@ class SansData:
                 self.measurement_count = int(numbers[1])
                 self.log("\tMeasurement time: {:.4g} s".format(self.measurement_time))
                 self.log("\tTotal counts: {}".format(self.measurement_count))
-                self.I_0 = self.measurement_count / self.measurement_time
+                if self.monitor_value is not None:
+                    self.log("\tMonitor counts: {}".format(self.monitor_value))
+                    self.log(
+                        "\tMonitor intensity: {:.4g} n/s".format(
+                            self.monitor_value / self.measurement_time
+                        )
+                    )
+
+                    self.count_ratio = self.measurement_count / self.monitor_value
+                    self.log(
+                        "\tDetector/monitor ratio: {:.4g}".format(self.count_ratio)
+                    )
+
+                if self.monitor_value is not None:
+                    self.I_0 = self.monitor_value / self.measurement_time
+                else:
+                    self.I_0 = self.measurement_count / self.measurement_time
                 self.log(
-                    "\tAverage detector intensity: {:.4g} counts/s".format(self.I_0)
+                    "\tAverage detector intensity: {:.4g} n/s".format(
+                        self.measurement_count / self.measurement_time
+                    )
                 )
 
         self.I = self.raw_intensity / self.measurement_time
