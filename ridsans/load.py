@@ -13,6 +13,19 @@ def option_map(file_name):
         return None
 
 
+def load_measurement_files_sequential(
+    file_list,
+    plot_measurements=False,
+):
+    """Loads all needed measurement files as SansData objects and plots these if plot_measurements is set."""
+    loaded_list = [option_map(file) for file in file_list]
+    if plot_measurements:
+        for x in loaded_list:
+            if x is not None:
+                x.plot_2d(True)
+    return loaded_list
+
+
 def load_measurement_files(
     file_list,
     plot_measurements=False,
