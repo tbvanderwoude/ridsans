@@ -135,8 +135,6 @@ def workspace_from_measurement(
     I_0 = flux_factor * np.sum(direct.I)
 
     # Corrected intensity considering background and tranmission factors of sample and can.
-    I_0 = np.sum(direct.I)
-
     if can_scatter is not None:
         # A can is used
         if can_transmission is not None:
