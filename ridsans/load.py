@@ -123,6 +123,17 @@ def workspace_from_measurement(
 
     print(f"Transmission factors: T_sample = {T_sample}; T_can = {T_can}")
 
+    # Compensate for a differing monitor flux-ratio between scatter and transmission measurement
+    # The monitor count indicates what the total rate of neutrons
+    # entering the instrument from the beamline is
+    flux_factor = sample_scatter.I_0 / direct.I_0
+
+    # Normalize scattering by the direct intensity
+    # times the monitor flux ratio of scatter/transmission measurements
+    # This effectively transforms the total detector count of the direct measurement
+    # to an estimate of what the total detector count would be at the adjusted flux
+    I_0 = flux_factor * np.sum(direct.I)
+
     # Corrected intensity considering background and tranmission factors of sample and can.
     I_0 = np.sum(direct.I)
 
