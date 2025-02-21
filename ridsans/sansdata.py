@@ -241,6 +241,46 @@ class SansData:
         # Use Poisson statistics for each pixel
         self.dI = np.sqrt(self.raw_intensity) / self.measurement_time
 
+    def load_scaler_a(self, lines):
+        # Locate the [SCALER A] header in the file
+        scaler_a_index = next(
+            (i for i, line in enumerate(lines) if line.strip() == "[SCALER A]"), None
+        )
+        if scaler_a_index is None:
+            self.log("No [SCALER A] header found.")
+            return
+
+        # Initialize dictionary to store the scaler parameters
+        # Currenty only sc#01 is used but this could change in the future
+        scaler_a_params = {}
+
+        for line in lines[scaler_a_index + 1 :]:
+            line = line.strip()
+            if not line or line.startswith("["):
+                break
+            if "=" in line:
+                key, value = line.split("=", 1)
+                value = value.split(";")[0].strip()
+                scaler_a_params[key.strip()] = value
+
+        # Store the extracted scaler data in an instance attribute
+        self.scaler_a_data = scaler_a_params
+
+        # Extract the most important value, sc#01, converting to integer if possible
+        if "sc#01" in scaler_a_params:
+            try:
+                monitor_reading = int(scaler_a_params["sc#01"])
+                if monitor_reading != 0:
+                    self.monitor_value = monitor_reading
+                else:
+                    self.log("sc#01 = 0, ignoring")
+            except ValueError:
+                raise ValueError(
+                    "Could not convert sc#01 to number, check the value in the file for irregularities"
+                )
+        else:
+            self.log("Could not find sc#01")
+
     def load_float_with_default(self, name, default):
         if name in self.header_params:
             return float(self.header_params[name])
