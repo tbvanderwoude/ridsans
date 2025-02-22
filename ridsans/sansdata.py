@@ -332,5 +332,24 @@ class SansData:
 
 
 if __name__ == "__main__":
-    sample = SansData("data/old-data/memb_BS_Q1_6_0Ang.mpa", log_process=True)
-    bg = SansData("data/old-data/08_07_24_backG_1202s_reactor_on.mpa", log_process=True)
+    print("\n\n============= Q = 1 =============")
+    sample = SansData(
+        "test-data/transmission_air_boronglass_rubber_extra_attentuator_d10_noBeamstop_Q1.mpa",
+        log_process=True,
+    )
+    sample = SansData(
+        "test-data/transmission_glassyC_boronglass_rubber_extra_attentuator_d10_noBeamstop_Q1.mpa",
+        log_process=True,
+    )
+    sample = SansData("test-data/scattering_glassyC_Q1.mpa", log_process=True)
+    for i in range(2, 3):
+        print(f"\n\n============= Q = {i} =============")
+        sample = SansData(
+            f"test-data/transmission_air_boronglass_rubber_noBeamstop_Q{i}.mpa",
+            log_process=True,
+        )
+        sample = SansData(
+            f"test-data/transmission_glassyC_boronglass_rubber_noBeamstop_Q{i}.mpa",
+            log_process=True,
+        )
+        sample = SansData(f"test-data/scattering_glassyC_Q{i}.mpa", log_process=True)
