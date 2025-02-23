@@ -61,8 +61,10 @@ def create_pixel_adj_workspace(pixel_efficiencies, bins, detectors):
 
 def compute_transmission_factor(sample_transmission, direct):
     """Compute tranmission factor assuming that the same attenuator is used, needs to be adjusted otherwise."""
-    # TODO: Consider ROI for more accurate tranmission estimate (less noise)
-    return np.sum(sample_transmission.I) / np.sum(direct.I)
+    # Compensates for slight variations between beam intensity for sample and empty transmission measurements
+    beam_variation_factor = direct.I_0 / sample_transmission.I_0
+    # TODO: Consider ROI for more accurate tranmission estimate (less signal to noise)
+    return np.sum(sample_transmission.I) / np.sum(direct.I) * beam_variation_factor
 
 
 def monochromatic_workspace(name, I, detector_position, bins, detectors, error=None):
