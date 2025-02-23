@@ -139,10 +139,14 @@ def workspace_from_measurement(
     # Corrected intensity considering background and tranmission factors of sample and can.
     if can_scatter is not None:
         # A can is used
+
+        # There can be slight differences in the beamline intensity between can and sample
+        # measurements, corrects for this
+        sample_can_ratio = can_scatter.I_0 / sample_scatter.I_0
         if can_transmission is not None:
             I_corrected = (
                 1 / (T_sample * T_can) * (sample_scatter.I - background.I)
-                - 1 / T_can * (can_scatter.I - background.I)
+                - 1 / T_can * (can_scatter.I*sample_can_ratio - background.I)
             ) / I_0
 
             # Ignore error T_sample, T_can and I_0
@@ -151,7 +155,7 @@ def workspace_from_measurement(
             dI_corrected = (
                 np.sqrt(
                     (sample_scatter.dI**2 + background.dI**2) / (T_sample * T_can) ** 2
-                    + (can_scatter.dI**2 + background.dI**2) / (T_can) ** 2
+                    + ((can_scatter.dI * sample_can_ratio)**2 + background.dI**2) / (T_can) ** 2
                 )
                 / I_0
             )
