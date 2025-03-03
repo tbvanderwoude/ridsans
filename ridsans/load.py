@@ -112,8 +112,8 @@ def workspace_from_measurement(
     detectors,
 ):
     """Creates a workspace with scaled intensity in counts/s"""
-    # Sample transmission factor
-    T_sample = compute_transmission_factor(sample_transmission, direct)
+    # Transmission factor of sample and can together
+    T_sample_can = compute_transmission_factor(sample_transmission, direct)
     # Can (container) transmission factor
     T_can = (
         1.0  # Ideally to be computed from can_transmission measurement, not present?
@@ -123,6 +123,7 @@ def workspace_from_measurement(
     if can_transmission is not None:
         T_can = compute_transmission_factor(can_transmission, direct)
 
+    T_sample = T_sample_can / T_can
     print(f"Transmission factors: T_sample = {T_sample}; T_can = {T_can}")
 
     # Compensate for a differing monitor flux-ratio between scatter and transmission measurement
@@ -145,8 +146,8 @@ def workspace_from_measurement(
         sample_can_ratio = can_scatter.I_0 / sample_scatter.I_0
         if can_transmission is not None:
             I_corrected = (
-                1 / (T_sample * T_can) * (sample_scatter.I - background.I)
-                - 1 / T_can * (can_scatter.I*sample_can_ratio - background.I)
+                1 / (T_sample_can) * (sample_scatter.I - background.I)
+                - 1 / T_can * (can_scatter.I * sample_can_ratio - background.I)
             ) / I_0
 
             # Ignore error T_sample, T_can and I_0
@@ -154,14 +155,15 @@ def workspace_from_measurement(
             # TODO: correct formula as background contributions here are correlated and not independent
             dI_corrected = (
                 np.sqrt(
-                    (sample_scatter.dI**2 + background.dI**2) / (T_sample * T_can) ** 2
-                    + ((can_scatter.dI * sample_can_ratio)**2 + background.dI**2) / (T_can) ** 2
+                    (sample_scatter.dI**2 + background.dI**2) / (T_sample_can) ** 2
+                    + ((can_scatter.dI * sample_can_ratio) ** 2 + background.dI**2)
+                    / (T_can) ** 2
                 )
                 / I_0
             )
         else:
             # Per the formula, when the same transmission is used for sample and can scattering,
-            # the background cancels... Feels dubious
+            # the background cancels...
             # TODO: verify this is allowed
             I_corrected = (1 / T_sample * (sample_scatter.I - can_scatter.I)) / I_0
 
