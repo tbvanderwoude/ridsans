@@ -2,7 +2,6 @@ from ridsans.batch_processing import *
 from ridsans.reduce import *
 from mantid.api import AnalysisDataService as ADS
 
-# mask_workspace = ADS.retrieve('MaskWorkspace')
 for index in range(0,4):
     ws_sample, ws_direct, mon, ws_pixel_adj = load_batchfile_index_workspaces(
         index, "pixel-efficiency.txt.gz", "test.csv", directory="test-data",
