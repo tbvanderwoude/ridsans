@@ -342,7 +342,7 @@ if __name__ == "__main__":
         log_process=True,
     )
     sample = SansData("test-data/scattering_glassyC_Q1.mpa", log_process=True)
-    for i in range(2, 3):
+    for i in range(2, 5):
         print(f"\n\n============= Q = {i} =============")
         sample = SansData(
             f"test-data/transmission_air_boronglass_rubber_noBeamstop_Q{i}.mpa",
