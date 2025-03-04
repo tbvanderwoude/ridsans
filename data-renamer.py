@@ -20,8 +20,10 @@ def rename_files_in_directory(directory):
                     print(f"'Sample=' not found in {filename}. Skipping.")
                     continue
 
+            # TODO: harden this properly to avoid future problems with special characters
             # Generate the new filename
-            new_filename = f"{sample_name}.mpa"
+            new_filename = f"{sample_name.replace('.', '_')}.mpa".replace(" ", "_")
+
             new_file_path = os.path.join(directory, new_filename)
 
             # Rename the file

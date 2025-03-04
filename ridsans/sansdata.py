@@ -116,6 +116,7 @@ class SansData:
     def __init__(
         self, filename, log_process=False, keep_all_counts=False, image_code="CDAT2"
     ):
+        self.monitor_value = None
         self.log_process = log_process
         self.keep_all_counts = keep_all_counts
         self.image_code = image_code
@@ -148,6 +149,7 @@ class SansData:
         with open(filename) as f:
             lines = list(f)
         self.filename = filename
+        self.load_scaler_a(lines)
 
         # https://stackoverflow.com/questions/2361426/get-the-first-item-from-an-iterable-that-matches-a-condition
         header_end = next(
@@ -232,14 +234,72 @@ class SansData:
                 self.measurement_count = int(numbers[1])
                 self.log("\tMeasurement time: {:.4g} s".format(self.measurement_time))
                 self.log("\tTotal counts: {}".format(self.measurement_count))
-                self.I_0 = self.measurement_count / self.measurement_time
+                if self.monitor_value is not None:
+                    self.log("\tMonitor counts: {}".format(self.monitor_value))
+                    self.log(
+                        "\tMonitor intensity: {:.4g} n/s".format(
+                            self.monitor_value / self.measurement_time
+                        )
+                    )
+
+                    self.count_ratio = self.measurement_count / self.monitor_value
+                    self.log(
+                        "\tDetector/monitor ratio: {:.4g}".format(self.count_ratio)
+                    )
+
+                if self.monitor_value is not None:
+                    self.I_0 = self.monitor_value / self.measurement_time
+                else:
+                    self.I_0 = self.measurement_count / self.measurement_time
                 self.log(
-                    "\tAverage detector intensity: {:.4g} counts/s".format(self.I_0)
+                    "\tAverage detector intensity: {:.4g} n/s".format(
+                        self.measurement_count / self.measurement_time
+                    )
                 )
 
         self.I = self.raw_intensity / self.measurement_time
         # Use Poisson statistics for each pixel
         self.dI = np.sqrt(self.raw_intensity) / self.measurement_time
+
+    def load_scaler_a(self, lines):
+        # Locate the [SCALER A] header in the file
+        scaler_a_index = next(
+            (i for i, line in enumerate(lines) if line.strip() == "[SCALER A]"), None
+        )
+        if scaler_a_index is None:
+            self.log("No [SCALER A] header found.")
+            return
+
+        # Initialize dictionary to store the scaler parameters
+        # Currenty only sc#01 is used but this could change in the future
+        scaler_a_params = {}
+
+        for line in lines[scaler_a_index + 1 :]:
+            line = line.strip()
+            if not line or line.startswith("["):
+                break
+            if "=" in line:
+                key, value = line.split("=", 1)
+                value = value.split(";")[0].strip()
+                scaler_a_params[key.strip()] = value
+
+        # Store the extracted scaler data in an instance attribute
+        self.scaler_a_data = scaler_a_params
+
+        # Extract the most important value, sc#01, converting to integer if possible
+        if "sc#01" in scaler_a_params:
+            try:
+                monitor_reading = int(scaler_a_params["sc#01"])
+                if monitor_reading != 0:
+                    self.monitor_value = monitor_reading
+                else:
+                    self.log("sc#01 = 0, ignoring")
+            except ValueError:
+                raise ValueError(
+                    "Could not convert sc#01 to number, check the value in the file for irregularities"
+                )
+        else:
+            self.log("Could not find sc#01")
 
     def load_float_with_default(self, name, default):
         if name in self.header_params:
@@ -272,5 +332,24 @@ class SansData:
 
 
 if __name__ == "__main__":
-    sample = SansData("data/old-data/memb_BS_Q1_6_0Ang.mpa", log_process=True)
-    bg = SansData("data/old-data/08_07_24_backG_1202s_reactor_on.mpa", log_process=True)
+    print("\n\n============= Q = 1 =============")
+    sample = SansData(
+        "test-data/transmission_air_boronglass_rubber_extra_attentuator_d10_noBeamstop_Q1.mpa",
+        log_process=True,
+    )
+    sample = SansData(
+        "test-data/transmission_glassyC_boronglass_rubber_extra_attentuator_d10_noBeamstop_Q1.mpa",
+        log_process=True,
+    )
+    sample = SansData("test-data/scattering_glassyC_Q1.mpa", log_process=True)
+    for i in range(2, 5):
+        print(f"\n\n============= Q = {i} =============")
+        sample = SansData(
+            f"test-data/transmission_air_boronglass_rubber_noBeamstop_Q{i}.mpa",
+            log_process=True,
+        )
+        sample = SansData(
+            f"test-data/transmission_glassyC_boronglass_rubber_noBeamstop_Q{i}.mpa",
+            log_process=True,
+        )
+        sample = SansData(f"test-data/scattering_glassyC_Q{i}.mpa", log_process=True)

@@ -13,6 +13,19 @@ def option_map(file_name):
         return None
 
 
+def load_measurement_files_sequential(
+    file_list,
+    plot_measurements=False,
+):
+    """Loads all needed measurement files as SansData objects and plots these if plot_measurements is set."""
+    loaded_list = [option_map(file) for file in file_list]
+    if plot_measurements:
+        for x in loaded_list:
+            if x is not None:
+                x.plot_2d(True)
+    return loaded_list
+
+
 def load_measurement_files(
     file_list,
     plot_measurements=False,
@@ -48,8 +61,9 @@ def create_pixel_adj_workspace(pixel_efficiencies, bins, detectors):
 
 def compute_transmission_factor(sample_transmission, direct):
     """Compute tranmission factor assuming that the same attenuator is used, needs to be adjusted otherwise."""
-    # TODO: Consider ROI for more accurate tranmission estimate (less noise)
-    return np.sum(sample_transmission.I) / np.sum(direct.I)
+    # Compensates for slight variations between beam intensity for sample and empty transmission measurements
+    beam_variation_factor = direct.I_0 / sample_transmission.I_0
+    return np.sum(sample_transmission.I) / np.sum(direct.I) * beam_variation_factor
 
 
 def monochromatic_workspace(name, I, detector_position, bins, detectors, error=None):
@@ -97,8 +111,8 @@ def workspace_from_measurement(
     detectors,
 ):
     """Creates a workspace with scaled intensity in counts/s"""
-    # Sample transmission factor
-    T_sample = compute_transmission_factor(sample_transmission, direct)
+    # Transmission factor of sample and can together
+    T_sample_can = compute_transmission_factor(sample_transmission, direct)
     # Can (container) transmission factor
     T_can = (
         1.0  # Ideally to be computed from can_transmission measurement, not present?
@@ -108,17 +122,34 @@ def workspace_from_measurement(
     if can_transmission is not None:
         T_can = compute_transmission_factor(can_transmission, direct)
 
+    T_sample = T_sample_can / T_can
     print(f"Transmission factors: T_sample = {T_sample}; T_can = {T_can}")
 
-    # Corrected intensity considering background and tranmission factors of sample and can.
-    I_0 = np.sum(direct.I)
+    # Compensate for a differing monitor flux-ratio between scatter and transmission measurement
+    # The monitor count indicates what the total rate of neutrons
+    # entering the instrument from the beamline is
+    flux_factor = sample_scatter.I_0 / direct.I_0
 
+    # Normalize scattering by the direct intensity
+    # times the monitor flux ratio of scatter/transmission measurements
+    # This effectively transforms the total detector count of the direct measurement
+    # to an estimate of what the total detector count would be at the adjusted flux
+    
+    # In other words, this gives an estimate of the the total empty beam intensity
+    # at the flux of the scattering measurement
+    I_0 = flux_factor * np.sum(direct.I)
+
+    # Corrected intensity considering background and tranmission factors of sample and can.
     if can_scatter is not None:
         # A can is used
+
+        # There can be slight differences in the beamline intensity between can and sample
+        # measurements, corrects for this
+        sample_can_ratio = can_scatter.I_0 / sample_scatter.I_0
         if can_transmission is not None:
             I_corrected = (
-                1 / (T_sample * T_can) * (sample_scatter.I - background.I)
-                - 1 / T_can * (can_scatter.I - background.I)
+                1 / (T_sample_can) * (sample_scatter.I - background.I)
+                - 1 / T_can * (can_scatter.I * sample_can_ratio - background.I)
             ) / I_0
 
             # Ignore error T_sample, T_can and I_0
@@ -126,14 +157,15 @@ def workspace_from_measurement(
             # TODO: correct formula as background contributions here are correlated and not independent
             dI_corrected = (
                 np.sqrt(
-                    (sample_scatter.dI**2 + background.dI**2) / (T_sample * T_can) ** 2
-                    + (can_scatter.dI**2 + background.dI**2) / (T_can) ** 2
+                    (sample_scatter.dI**2 + background.dI**2) / (T_sample_can) ** 2
+                    + ((can_scatter.dI * sample_can_ratio) ** 2 + background.dI**2)
+                    / (T_can) ** 2
                 )
                 / I_0
             )
         else:
             # Per the formula, when the same transmission is used for sample and can scattering,
-            # the background cancels... Feels dubious
+            # the background cancels...
             # TODO: verify this is allowed
             I_corrected = (1 / T_sample * (sample_scatter.I - can_scatter.I)) / I_0
 
