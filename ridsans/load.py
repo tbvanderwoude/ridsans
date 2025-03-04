@@ -134,6 +134,9 @@ def workspace_from_measurement(
     # times the monitor flux ratio of scatter/transmission measurements
     # This effectively transforms the total detector count of the direct measurement
     # to an estimate of what the total detector count would be at the adjusted flux
+    
+    # In other words, this gives an estimate of the the total empty beam intensity
+    # at the flux of the scattering measurement
     I_0 = flux_factor * np.sum(direct.I)
 
     # Corrected intensity considering background and tranmission factors of sample and can.
