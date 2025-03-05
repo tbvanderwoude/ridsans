@@ -16,6 +16,25 @@ FZZ_map = {"Q1": 9742.34272, "Q2": 7427.9968, "Q3": 3422.98528, "Q4": 1432.00036
 rpm = np.array(
     [25450, 23100, 21200, 14150, 12700, 11550, 10600, 9750, 9100]
 )  # from the test data
+
+
+def get_closest_Q_range(uncorrected_distance, tolerance=5):
+    """Determines what the Q range is of the measurement"""
+    # Find the key-value pair with the smallest absolute difference
+    closest_key, closest_value = min(
+        FZZ_map.items(), key=lambda item: abs(uncorrected_distance - item[1])
+    )
+    error = abs(uncorrected_distance - closest_value)
+
+    if error > tolerance:
+        raise ValueError(
+            f"Measured distance {uncorrected_distance} mm is off by {error:.2f} mm, "
+            f"which exceeds the allowed tolerance of {tolerance} mm."
+        )
+
+    return closest_key, error
+
+
 wavelengths = np.array([5.0, 5.5, 6.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0])
 sorted_indices = np.argsort(rpm)
 sorted_wavelengths = wavelengths[sorted_indices]
@@ -160,14 +179,19 @@ class SansData:
             for key in FZZ_map.keys():
                 if key in self.filename:
                     self.d = (FZZ_map[key] + 1320) / 1e3
+                    self.Q_range_index = key[1:]
         else:
             self.header_params = {}
             for i in range(header_end):
                 split_line = lines[i].split("=")
                 name, value = split_line[0], split_line[1].strip()
                 self.header_params[name] = value
-
-            self.d = (self.load_distance() + 1320) / 1e3  # [m] 1320 is the offset
+            uncorrected_distance = self.load_distance()  # mm
+            # Finds the key matching the Q range (Q1 - Q4)
+            closest_key, _ = get_closest_Q_range(uncorrected_distance)
+            # Extracts the Q range (value from 1 - 4)
+            self.Q_range_index = closest_key[1:]
+            self.d = (uncorrected_distance + 1320) / 1e3  # [m] 1320 is the offset
             self.log("Detector to sample distance: {:.4g} m".format(self.d))
 
             self.velocity_selector_speed = self.load_velocity_selector()  # RPM
