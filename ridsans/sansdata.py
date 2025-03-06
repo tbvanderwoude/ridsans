@@ -13,9 +13,16 @@ cropped_extent = [233, 233 + active_w_pixels, 233, 233 + active_w_pixels]
 # This is needed because FZZ is not always present in the .mpa files
 FZZ_map = {"Q1": 9742.34272, "Q2": 7427.9968, "Q3": 3422.98528, "Q4": 1432.00036}
 
-rpm = np.array(
-    [25450, 23100, 21200, 14150, 12700, 11550, 10600, 9750, 9100]
-)  # from the test data
+# From velocity selector characterization
+a_fit = 1.27085576e05  # AA / RPM
+b_fit = 3.34615760e-03  # AA
+
+
+def rpm_to_lambda(x, a, b):
+    return a / x + b
+
+
+rpm_converter = lambda rpm: rpm_to_lambda(rpm, a_fit, b_fit)
 
 
 def get_closest_Q_range(uncorrected_distance, tolerance=5):
@@ -34,21 +41,6 @@ def get_closest_Q_range(uncorrected_distance, tolerance=5):
 
     return closest_key, error
 
-
-wavelengths = np.array([5.0, 5.5, 6.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0])
-sorted_indices = np.argsort(rpm)
-sorted_wavelengths = wavelengths[sorted_indices]
-sorted_rpm = rpm[sorted_indices]
-
-
-# Fits the mapping from RPM to wavelength
-def rpm_to_lambda0(x, a, b):
-    return a / x + b
-
-
-popt, _ = curve_fit(rpm_to_lambda0, sorted_rpm, sorted_wavelengths)
-
-rpm_converter = lambda rpm: rpm_to_lambda0(rpm, *popt)
 
 active_w = 0.6  # m
 active_h = 0.6  # m
