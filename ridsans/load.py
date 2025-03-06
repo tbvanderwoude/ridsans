@@ -2,46 +2,7 @@ from mantid.simpleapi import *
 from mantid.api import *
 from mantid.kernel import *
 from ridsans.sansdata import *
-from multiprocessing import Pool
-
-
-# A map on an Option type conceptually
-def option_map(file_name):
-    if file_name is not None:
-        return SansData(str(file_name))
-    else:
-        return None
-
-
-def load_measurement_files_sequential(
-    file_list,
-    plot_measurements=False,
-):
-    """Loads all needed measurement files as SansData objects and plots these if plot_measurements is set."""
-    loaded_list = [option_map(file) for file in file_list]
-    if plot_measurements:
-        for x in loaded_list:
-            if x is not None:
-                x.plot_2d(True)
-    return loaded_list
-
-
-def load_measurement_files(
-    file_list,
-    plot_measurements=False,
-):
-    """Loads all needed measurement files as SansData objects and plots these if plot_measurements is set. Uses a multiprocessing pool to speed up loading of files."""
-
-    with Pool(5) as p:
-        loaded_list = p.map(
-            option_map,
-            file_list,
-        )
-    if plot_measurements:
-        for x in loaded_list:
-            if x is not None:
-                x.plot_2d(True)
-    return loaded_list
+from ridsans.load_util import *
 
 
 def create_pixel_adj_workspace(pixel_efficiencies, bins, detectors):
