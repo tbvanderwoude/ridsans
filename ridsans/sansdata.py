@@ -1,7 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
-from scipy.optimize import curve_fit
 from math import pi as pi
 import re
 from pathlib import Path
@@ -13,23 +12,34 @@ cropped_extent = [233, 233 + active_w_pixels, 233, 233 + active_w_pixels]
 # This is needed because FZZ is not always present in the .mpa files
 FZZ_map = {"Q1": 9742.34272, "Q2": 7427.9968, "Q3": 3422.98528, "Q4": 1432.00036}
 
-rpm = np.array(
-    [25450, 23100, 21200, 14150, 12700, 11550, 10600, 9750, 9100]
-)  # from the test data
-wavelengths = np.array([5.0, 5.5, 6.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0])
-sorted_indices = np.argsort(rpm)
-sorted_wavelengths = wavelengths[sorted_indices]
-sorted_rpm = rpm[sorted_indices]
+# From velocity selector characterization
+a_fit = 1.27085576e05  # AA / RPM
+b_fit = 3.34615760e-03  # AA
 
 
-# Fits the mapping from RPM to wavelength
-def rpm_to_lambda0(x, a, b):
+def rpm_to_lambda(x, a, b):
     return a / x + b
 
 
-popt, _ = curve_fit(rpm_to_lambda0, sorted_rpm, sorted_wavelengths)
+rpm_converter = lambda rpm: rpm_to_lambda(rpm, a_fit, b_fit)
 
-rpm_converter = lambda rpm: rpm_to_lambda0(rpm, *popt)
+
+def get_closest_Q_range(uncorrected_distance, tolerance=5):
+    """Determines what the Q range is of the measurement"""
+    # Find the key-value pair with the smallest absolute difference
+    closest_key, closest_value = min(
+        FZZ_map.items(), key=lambda item: abs(uncorrected_distance - item[1])
+    )
+    error = abs(uncorrected_distance - closest_value)
+
+    if error > tolerance:
+        raise ValueError(
+            f"Measured distance {uncorrected_distance} mm is off by {error:.2f} mm, "
+            f"which exceeds the allowed tolerance of {tolerance} mm."
+        )
+
+    return closest_key, error
+
 
 active_w = 0.6  # m
 active_h = 0.6  # m
@@ -160,18 +170,27 @@ class SansData:
             for key in FZZ_map.keys():
                 if key in self.filename:
                     self.d = (FZZ_map[key] + 1320) / 1e3
+                    self.Q_range_index = key[1:]
         else:
             self.header_params = {}
             for i in range(header_end):
                 split_line = lines[i].split("=")
                 name, value = split_line[0], split_line[1].strip()
                 self.header_params[name] = value
-
-            self.d = (self.load_distance() + 1320) / 1e3  # [m] 1320 is the offset
+            uncorrected_distance = self.load_distance()  # mm
+            # Finds the key matching the Q range (Q1 - Q4)
+            closest_key, _ = get_closest_Q_range(uncorrected_distance)
+            # Extracts the Q range (value from 1 - 4)
+            self.Q_range_index = closest_key[1:]
+            self.d = (uncorrected_distance + 1320) / 1e3  # [m] 1320 is the offset
             self.log("Detector to sample distance: {:.4g} m".format(self.d))
 
             self.velocity_selector_speed = self.load_velocity_selector()  # RPM
-            self.L0 = rpm_converter(self.velocity_selector_speed)
+            if self.velocity_selector_speed == 0:
+                self.log("Velocity selector RPM appears to be 0, is this a background measurement?")
+                self.L0 = -1.0
+            else:
+                self.L0 = rpm_converter(self.velocity_selector_speed)
             self.log("lambda_0: {:.4g} Å".format(self.L0))
             # Create beamstop
             bs_large_x = float(self.header_params["BSXL"]) / 1e3  # m
@@ -332,24 +351,14 @@ class SansData:
 
 
 if __name__ == "__main__":
-    print("\n\n============= Q = 1 =============")
-    sample = SansData(
-        "test-data/transmission_air_boronglass_rubber_extra_attentuator_d10_noBeamstop_Q1.mpa",
-        log_process=True,
-    )
-    sample = SansData(
-        "test-data/transmission_glassyC_boronglass_rubber_extra_attentuator_d10_noBeamstop_Q1.mpa",
-        log_process=True,
-    )
-    sample = SansData("test-data/scattering_glassyC_Q1.mpa", log_process=True)
-    for i in range(2, 5):
+    for i in range(1, 5):
         print(f"\n\n============= Q = {i} =============")
         sample = SansData(
-            f"test-data/transmission_air_boronglass_rubber_noBeamstop_Q{i}.mpa",
+            f"test-data/empty_beam_no_sample_Q{i}.mpa",
             log_process=True,
         )
         sample = SansData(
-            f"test-data/transmission_glassyC_boronglass_rubber_noBeamstop_Q{i}.mpa",
+            f"test-data/transmission_0_25mm_glassy_C_Q{i}.mpa",
             log_process=True,
         )
-        sample = SansData(f"test-data/scattering_glassyC_Q{i}.mpa", log_process=True)
+        sample = SansData(f"test-data/scattering_0_25mm_glassy_C_Q{i}.mpa", log_process=True)
