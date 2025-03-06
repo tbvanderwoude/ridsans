@@ -5,4 +5,4 @@ from mantid.kernel import *
 from ridsans.stitch import *
 
 workspaces = [ADS.retrieve(f"scattering_glassyC_Q{i}_Sigma/t_1D") for i in range(1, 5)]
-st, scale_factors = stitch_Q_ranges(workspaces)
+stitched_ws, scale_factors = stitch_Q_ranges(workspaces)
