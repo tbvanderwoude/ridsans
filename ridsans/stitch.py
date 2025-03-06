@@ -40,8 +40,10 @@ def stitch_Q_ranges(workspaces, bins=50):
 
     Q_stitched_step = (Q_stitched_max - Q_stitched_min) / bins
     OutScaleFactors = []
+    workspace_name = workspaces[0].name().rsplit("_", 1)[0] + "_stitched"
     st, scale_factors = Stitch1DMany(
         trimmed_workspaces,
+        OutputWorkspace=workspace_name,
         OutScaleFactors=OutScaleFactors,
         Params=f"{Q_stitched_min},{Q_stitched_step},{Q_stitched_max}",
     )
