@@ -1,7 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
-from scipy.optimize import curve_fit
 from math import pi as pi
 import re
 from pathlib import Path
