@@ -11,7 +11,7 @@ def option_map(file_name):
 
 
 def load_measurement_files(
-    file_list, plot_measurements=False, load_parallel=False, mp_pool_size=5
+    file_list, plot_measurements=False, load_parallel=True, mp_pool_size=5
 ):
     """Loads all needed measurement files as SansData objects and plots these if plot_measurements is set. Uses a multiprocessing pool by default to speed up loading of files."""
     if load_parallel:
