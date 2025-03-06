@@ -3,9 +3,11 @@ from mantid.api import *
 from mantid.kernel import *
 
 
-def stitch_Q_ranges(workspaces):
+def stitch_Q_ranges(workspaces, bins=50):
     """Stitches together workspaces corresponding to different Q ranges, first trimming each workspace to the unmasked Q interval."""
     trimmed_workspaces = []
+    Q_stitched_max = -1.0
+    Q_stitched_min = 10000
     for i, ws in enumerate(workspaces):
         print(i)
         Q_axis = np.array(ws.dataX(0))[:-1]
@@ -33,9 +35,14 @@ def stitch_Q_ranges(workspaces):
             Params=f"{Q_min_trim},{Q_step_trim},{Q_max_trim}",
         )
         trimmed_workspaces.append(trimmed_workspace)
+        Q_stitched_min = min(Q_stitched_min, Q_min_trim)
+        Q_stitched_max = max(Q_stitched_max, Q_max_trim)
 
+    Q_stitched_step = (Q_stitched_max - Q_stitched_min) / bins
     OutScaleFactors = []
     st, scale_factors = Stitch1DMany(
-        trimmed_workspaces, OutScaleFactors=OutScaleFactors
+        trimmed_workspaces,
+        OutScaleFactors=OutScaleFactors,
+        Params=f"{Q_stitched_min},{Q_stitched_step},{Q_stitched_max}",
     )
     return st, scale_factors
