@@ -26,7 +26,7 @@ def load_batchfile_index_workspaces(
             direct_file,
             background_file,
         ) = get_filenames_from_batchfile_index(index, batch_filename, directory)
-        ws_sample, ws_direct, mon, ws_pixel_adj = load_RIDSANS(
+        ws_sample, ws_direct, mon, ws_pixel_adj, Q_range_index = load_RIDSANS(
             sample_scatter_file,
             sample_transmission_file,
             can_scatter_file,
@@ -35,7 +35,7 @@ def load_batchfile_index_workspaces(
             background_file,
             efficiency_file,
         )
-        return ws_sample, ws_direct, mon, ws_pixel_adj
+        return ws_sample, ws_direct, mon, ws_pixel_adj, Q_range_index
 
 
 def retrieve_batchfile_index_workspaces(
@@ -47,7 +47,8 @@ def retrieve_batchfile_index_workspaces(
     ws_sample = ADS.retrieve(sample_scatter)
     ws_direct = ADS.retrieve(direct)
     ws_pixel_adj = ADS.retrieve("PixelAdj")
-    return ws_sample, ws_direct, None, ws_pixel_adj
+    Q_range_index = ws_sample.run().getProperty("Q_range_index").value
+    return ws_sample, ws_direct, None, ws_pixel_adj, Q_range_index
 
 
 def get_workspace_names_from_batchfile_index(
