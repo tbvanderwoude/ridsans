@@ -8,7 +8,7 @@ efficiency_file = "pixel-efficiency.txt.gz"
 # I think this translates to direct, not sure
 direct_file = f"sample-data/Niels_no_cuvette_transmission_Q{i}.mpa"
 background_file = f"sample-data/Background_Q{i}.mpa"
-ws_sample, ws_direct, mon, ws_pixel_adj = load_RIDSANS(
+ws_sample, ws_direct, mon, ws_pixel_adj, Q_range_index = load_RIDSANS(
     sample_scatter_file,
     sample_transmission_file,
     can_scatter_file,

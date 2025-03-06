@@ -47,4 +47,6 @@ def stitch_Q_ranges(workspaces, bins=50):
         OutScaleFactors=OutScaleFactors,
         Params=f"{Q_stitched_min},{Q_stitched_step},{Q_stitched_max}",
     )
+    for trimmed_ws in trimmed_workspaces:
+        DeleteWorkspace(Workspace=trimmed_ws.name())
     return st, scale_factors

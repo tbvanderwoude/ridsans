@@ -143,14 +143,18 @@ def workspace_from_measurement(
         dI_corrected = (
             np.sqrt((sample_scatter.dI**2 + background.dI**2) / (T_sample)) / I_0
         )
-
-    return monochromatic_workspace(
+    ws, mon = monochromatic_workspace(
         sample_scatter.name,
         I_corrected,
         sample_scatter.d,
         bins,
         detectors,
         error=dI_corrected,
+    )
+    return (
+        ws,
+        mon,
+        sample_scatter.Q_range_index,
     )
 
 
@@ -173,7 +177,7 @@ def load_RIDSANS_from_sansdata(
     bins = create_monochrom_bin_bounds(sample_scatter.L0)
     detectors = sample_scatter.pixel_count
     pixel_adj = create_pixel_adj_workspace(relative_pixel_efficiency, bins, detectors)
-    ws_sample, mon = workspace_from_measurement(
+    ws_sample, mon, Q_range_index = workspace_from_measurement(
         sample_scatter,
         sample_transmission,
         can_scatter,
@@ -184,7 +188,9 @@ def load_RIDSANS_from_sansdata(
         detectors,
     )
     ws_direct, _ = workspace_from_sansdata(direct, bins, detectors)
-    return ws_sample, ws_direct, mon, pixel_adj
+    ws_sample.getRun().addProperty("Q_range_index", Q_range_index, True)
+    ws_direct.getRun().addProperty("Q_range_index", Q_range_index, True)
+    return ws_sample, ws_direct, mon, pixel_adj, Q_range_index
 
 
 def load_RIDSANS(
@@ -222,7 +228,7 @@ def load_RIDSANS(
         direct,
         background,
     ) = load_measurement_files(file_list)
-    ws_sample, ws_direct, mon, ws_pixel_adj = load_RIDSANS_from_sansdata(
+    ws_sample, ws_direct, mon, ws_pixel_adj, Q_range_index = load_RIDSANS_from_sansdata(
         sample_scatter,
         sample_transmission,
         can_scatter,
@@ -232,4 +238,4 @@ def load_RIDSANS(
         relative_pixel_efficiency,
     )
     del sample_scatter, sample_transmission, can_scatter, direct, background
-    return ws_sample, ws_direct, mon, ws_pixel_adj
+    return ws_sample, ws_direct, mon, ws_pixel_adj, Q_range_index
