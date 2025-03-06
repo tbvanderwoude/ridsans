@@ -188,7 +188,7 @@ class SansData:
             self.velocity_selector_speed = self.load_velocity_selector()  # RPM
             if self.velocity_selector_speed == 0:
                 self.log("Velocity selector RPM appears to be 0, is this a background measurement?")
-                self.L0 = -1.0
+                self.L0 = None
             else:
                 self.L0 = rpm_converter(self.velocity_selector_speed)
             self.log("lambda_0: {:.4g} Å".format(self.L0))
