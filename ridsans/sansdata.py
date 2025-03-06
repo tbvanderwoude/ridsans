@@ -186,8 +186,14 @@ class SansData:
             self.log("Detector to sample distance: {:.4g} m".format(self.d))
 
             self.velocity_selector_speed = self.load_velocity_selector()  # RPM
-            self.L0 = rpm_converter(self.velocity_selector_speed)
-            self.log("lambda_0: {:.4g} Å".format(self.L0))
+            if self.velocity_selector_speed == 0:
+                self.log(
+                    "Velocity selector RPM appears to be 0, is this a background measurement?"
+                )
+                self.L0 = None
+            else:
+                self.L0 = rpm_converter(self.velocity_selector_speed)
+                self.log("lambda_0: {:.4g} Å".format(self.L0))
             # Create beamstop
             bs_large_x = float(self.header_params["BSXL"]) / 1e3  # m
             bs_small_x = float(self.header_params["BSXS"]) / 1e3  # m
@@ -357,4 +363,6 @@ if __name__ == "__main__":
             f"test-data/transmission_0_25mm_glassy_C_Q{i}.mpa",
             log_process=True,
         )
-        sample = SansData(f"test-data/scattering_0_25mm_glassy_C_Q{i}.mpa", log_process=True)
+        sample = SansData(
+            f"test-data/scattering_0_25mm_glassy_C_Q{i}.mpa", log_process=True
+        )

@@ -81,7 +81,7 @@ def reduce_RIDSANS_1D(ws_sample, ws_pixel_adj, output_workspace=None):
     r = active_w / 2
     Q_max = 4 * np.pi / L0 * np.sin(np.arctan(r / (ds_dist)) / 2)  # AA-1
     output_binning = np.linspace(0, Q_max, 201)
-    name = ws_sample.name() + "_Sigma/t_1D"
+    name = ws_sample.name() + "_dSigma/dOmega_1D"
     if output_workspace is not None:
         name = output_workspace
     reduced_ws_1D = Q1D(
@@ -114,7 +114,7 @@ def reduce_RIDSANS_2D(ws_sample, ws_pixel_adj, output_workspace=None):
     delta_Q = Q_max / 100
     # max_QXY = 0.01
     # N_Q_bins = int(np.floor(2*Q_max/delta_Q)+2)
-    name = ws_sample.name() + "_Sigma/t_2D"
+    name = ws_sample.name() + "_dSigma/dOmega_2D"
     if output_workspace is not None:
         name = output_workspace
 
