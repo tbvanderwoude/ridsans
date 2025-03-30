@@ -35,17 +35,23 @@ def mask_circle(ws, r, negative=False, offset_x=0, offset_y=0):
     MaskDetectors(Workspace=ws, SpectraList=mask_list)
 
 
-def reduction_setup_RIDSANS(ws_sample, ws_direct, ROI=None, mask_workspace=None):
-    """Finds the beam center and applies a mask"""
+def reduction_setup_RIDSANS(
+    ws_sample, ws_direct, ROI=None, mask_workspace=None, center_workspace=None
+):
+    """Finds the beam center if no center_workspace is provided and optionally applies a mask"""
     # STEP 1: find beam centre from direct beam
     # Compute the center position, which will be put in a table workspace
 
     # Uses direct beam method
-    center = FindCenterOfMassPosition(ws_direct, Output="center", Tolerance=0.0005)
+    if center_workspace is None:
+        center = FindCenterOfMassPosition(ws_direct, Output="center", Tolerance=0.0005)
+    else:
+        center = center_workspace
     center_x, center_y = center.column(1)
     print(f"(x, y) = ({center_x:.4f}, {center_y:.4f})")
+
     # Idea: move detector based on beamstop position to compensate for shift
-    # Question: does this actually make sense?
+    # Does this actually make sense? It seems to be only valid assuming a small shift
     MoveInstrumentComponent(
         ws_sample,
         ComponentName="detector-bank",
