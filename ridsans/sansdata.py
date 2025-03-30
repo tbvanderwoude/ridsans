@@ -1,3 +1,4 @@
+import os
 import re
 from math import pi as pi
 from pathlib import Path
@@ -5,18 +6,31 @@ from pathlib import Path
 import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 import numpy as np
+import yaml
 
-active_w_pixels = 552
-cropped_extent = [235, 235 + active_w_pixels, 239, 239 + active_w_pixels]
+
+def load_config(filename="instrument_config.yaml"):
+    """Load configuration from a YAML file."""
+    base_dir = os.path.dirname(__file__)
+    filepath = os.path.join(base_dir, filename)
+    with open(filepath) as file:
+        return yaml.safe_load(file)
+
+# Load the configuration automatically when the module is imported
+config = load_config()
+
+# Convert to integers
+active_w_pixels = int(config["active_w_pixels"])
+cropped_extent = list(map(int, config["cropped_extent"]))
 crop_y_start, crop_y_end, crop_x_start, crop_x_end = cropped_extent
 
-# The numbers represent FZZ in the 4 sample positions
-# This is needed because FZZ is not always present in the .mpa files
-FZZ_map = {"Q1": 9742.34272, "Q2": 7427.9968, "Q3": 3422.98528, "Q4": 1432.00036}
+FZZ_map = config["FZZ_map"]
 
-# From velocity selector characterization
-a_fit = 1.27085576e05  # AA / RPM
-b_fit = 3.34615760e-03  # AA
+# Convert to floats
+a_fit = float(config["a_fit"])
+b_fit = float(config["b_fit"])
+active_w = float(config["active_w"])
+active_h = float(config["active_h"])
 
 
 def rpm_to_lambda(x, a, b):
@@ -51,10 +65,6 @@ def get_closest_Q_range(uncorrected_distance, tolerance=5):
         )
 
     return closest_key, error
-
-
-active_w = 0.6  # m
-active_h = 0.6  # m
 
 
 def plot_I(I, plot_centre_cross=True, extent=cropped_extent):
@@ -161,16 +171,6 @@ class SansData:
         self.load_data(filename)
 
         self.log(f"Pixel count: {self.pixel_count}")
-
-        # Define the distances based on the provided geometry (in mm)
-        self.distances = {
-            "D_to_DS": 1320 + 0,  # Distance from diaphragm to sample, + PosFzz
-            "DS_to_S": 1320,  # Distance from DS to Sample
-            "DS_to_KB3": 2802,  # Distance from Sample to KB3
-            "DS_to_KB2": 4793,  # Distance from KB3 to KB2
-            "DS_to_KB1": 8798,  # Distance from KB2 to KB1
-            "DS_to_PB1": 11606,  # Distance from KB1 to P01
-        }
 
     def log(self, s):
         if self.log_process:
