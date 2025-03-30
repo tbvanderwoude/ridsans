@@ -285,9 +285,7 @@ class SansData:
                 self.log(f"\tTotal counts: {self.measurement_count}")
                 if self.monitor_value is not None:
                     self.log(f"\tMonitor counts: {self.monitor_value}")
-                    self.log(
-                        f"\tMonitor intensity: {self.monitor_value /
-                                                 self.measurement_time:.4g} n/s"
+                    self.log(f"\tMonitor intensity: {self.monitor_value / self.measurement_time:.4g} n/s"
                     )
 
                     self.count_ratio = self.measurement_count / self.monitor_value
@@ -300,8 +298,7 @@ class SansData:
                 else:
                     self.I_0 = self.measurement_count / self.measurement_time
                 self.log(
-                    f"\tAverage detector intensity: {self.measurement_count / 
-                                                     self.measurement_time:.4g} n/s"
+                    f"\tAverage detector intensity: {self.measurement_count / self.measurement_time:.4g} n/s"
                 )
 
         self.I = self.raw_intensity / self.measurement_time
