@@ -22,8 +22,8 @@ b_fit = 3.34615760e-03  # AA
 def rpm_to_lambda(x, a, b):
     return a / x + b
 
-
-rpm_converter = lambda rpm: rpm_to_lambda(rpm, a_fit, b_fit)
+def rpm_converter(rpm):
+    return rpm_to_lambda(rpm, a_fit, b_fit)
 
 
 def rebin2d(arr, n):
@@ -210,7 +210,8 @@ class SansData:
             self.velocity_selector_speed = self.load_velocity_selector()  # RPM
             if self.velocity_selector_speed == 0:
                 self.log(
-                    "Velocity selector RPM appears to be 0, is this a background measurement?"
+                    "Velocity selector RPM appears to be 0,\
+                          is this a background measurement?"
                 )
                 self.L0 = None
             else:
@@ -229,7 +230,8 @@ class SansData:
 
         # Extract CDAT2 array from remaining file as raw detector counts
 
-        # Measurement data sequences look like [CDAT2,1048576] (regular expression: \[.DAT.,\d* \])
+        # Measurement data sequences look like [CDAT2,1048576]
+        # This translates to the regular expression: \[.DAT.,\d* \]
         r = re.compile("\[.DAT.,\d* \]")
         sequence_headers = list(filter(lambda x: r.match(x[1]), enumerate(lines)))
         # The CDAT2 count sequence is used to read 1024 x 1024 values
@@ -249,7 +251,8 @@ class SansData:
         )
         # Reshape 1D 1048576 array to 2D 1024 x 1024
         cdat_2d = np.reshape(cdat2, (1024, 1024))
-        # Transpose it to switch axes (I assume because it was column-major and needs to be row-major)
+        # Transpose it to switch axes (I assume because it was column-major and needs to
+        #  be row-major)
         # self.raw_intensity = np.transpose(cdat2_2d)
         if self.keep_all_counts:
             self.raw_intensity = np.flip(cdat_2d, axis=0)
@@ -265,7 +268,8 @@ class SansData:
             self.log(f"Dimension of clipped counts: {rows} x {cols}")
             assert self.pixel_count == len(self.raw_intensity.flatten())
 
-        # The following extracts the measurement time and total counts from under the [CHN2] header
+        # The following extracts the measurement time and total counts from under the 
+        # [CHN2] header
         r = re.compile("\[CHN\d*\]")
         sequence_headers = list(
             filter(lambda x: r.match(x[1]), enumerate(lines[:data_start]))
@@ -282,7 +286,8 @@ class SansData:
                 if self.monitor_value is not None:
                     self.log(f"\tMonitor counts: {self.monitor_value}")
                     self.log(
-                        f"\tMonitor intensity: {self.monitor_value / self.measurement_time:.4g} n/s"
+                        f"\tMonitor intensity: {self.monitor_value /
+                                                 self.measurement_time:.4g} n/s"
                     )
 
                     self.count_ratio = self.measurement_count / self.monitor_value
@@ -295,7 +300,8 @@ class SansData:
                 else:
                     self.I_0 = self.measurement_count / self.measurement_time
                 self.log(
-                    f"\tAverage detector intensity: {self.measurement_count / self.measurement_time:.4g} n/s"
+                    f"\tAverage detector intensity: {self.measurement_count / 
+                                                     self.measurement_time:.4g} n/s"
                 )
 
         self.I = self.raw_intensity / self.measurement_time
@@ -303,6 +309,8 @@ class SansData:
         self.dI = np.sqrt(self.raw_intensity) / self.measurement_time
 
     def load_scaler_a(self, lines):
+        """Currently, the whole purpose of loading the SCALER A section is to 
+        extract the monitor reading. """
         # Locate the [SCALER A] header in the file
         scaler_a_index = next(
             (i for i, line in enumerate(lines) if line.strip() == "[SCALER A]"), None
@@ -337,7 +345,8 @@ class SansData:
                     self.log("sc#01 = 0, ignoring")
             except ValueError:
                 raise ValueError(
-                    "Could not convert sc#01 to number, check the value in the file for irregularities"
+                    "Could not convert sc#01 to number, \
+                    check the value in the file for irregularities"
                 )
         else:
             self.log("Could not find sc#01")

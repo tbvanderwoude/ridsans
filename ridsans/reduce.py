@@ -113,7 +113,6 @@ def reduce_RIDSANS_2D(ws_sample, ws_pixel_adj, output_workspace=None):
     ds_dist = -sample_position.Z()
     r = active_w / 2
     Q_max = 4 * np.pi / L0 * np.sin(np.arctan(r / (ds_dist)) / 2)
-    Q_max  # AA-1
     delta_Q = Q_max / 100
     name = ws_sample.name() + "_dSigma/dOmega_2D"
     if output_workspace is not None:
