@@ -1,9 +1,10 @@
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.colors as mcolors
-from math import pi as pi
 import re
+from math import pi as pi
 from pathlib import Path
+
+import matplotlib.colors as mcolors
+import matplotlib.pyplot as plt
+import numpy as np
 
 active_w_pixels = 552
 cropped_extent = [235, 235 + active_w_pixels, 239, 239 + active_w_pixels]
@@ -188,7 +189,7 @@ class SansData:
         )
         if header_end == 0:
             self.log("No header was found, assuming this is a background measurement")
-            for key in FZZ_map.keys():
+            for key in FZZ_map:
                 if key in self.filename:
                     self.d = (FZZ_map[key] + 1320) / 1e3
                     self.Q_range_index = key[1:]
@@ -204,7 +205,7 @@ class SansData:
             # Extracts the Q range (value from 1 - 4)
             self.Q_range_index = closest_key[1:]
             self.d = (uncorrected_distance + 1320) / 1e3  # [m] 1320 is the offset
-            self.log("Detector to sample distance: {:.4g} m".format(self.d))
+            self.log(f"Detector to sample distance: {self.d:.4g} m")
 
             self.velocity_selector_speed = self.load_velocity_selector()  # RPM
             if self.velocity_selector_speed == 0:
@@ -214,7 +215,7 @@ class SansData:
                 self.L0 = None
             else:
                 self.L0 = rpm_converter(self.velocity_selector_speed)
-                self.log("lambda_0: {:.4g} Å".format(self.L0))
+                self.log(f"lambda_0: {self.L0:.4g} Å")
             # Create beamstop
             bs_large_x = float(self.header_params["BSXL"]) / 1e3  # m
             bs_small_x = float(self.header_params["BSXS"]) / 1e3  # m
@@ -276,19 +277,17 @@ class SansData:
                 numbers = re.findall(r"\d+\.\d+|\d+", report_str)
                 self.measurement_time = float(numbers[0])
                 self.measurement_count = int(numbers[1])
-                self.log("\tMeasurement time: {:.4g} s".format(self.measurement_time))
-                self.log("\tTotal counts: {}".format(self.measurement_count))
+                self.log(f"\tMeasurement time: {self.measurement_time:.4g} s")
+                self.log(f"\tTotal counts: {self.measurement_count}")
                 if self.monitor_value is not None:
-                    self.log("\tMonitor counts: {}".format(self.monitor_value))
+                    self.log(f"\tMonitor counts: {self.monitor_value}")
                     self.log(
-                        "\tMonitor intensity: {:.4g} n/s".format(
-                            self.monitor_value / self.measurement_time
-                        )
+                        f"\tMonitor intensity: {self.monitor_value / self.measurement_time:.4g} n/s"
                     )
 
                     self.count_ratio = self.measurement_count / self.monitor_value
                     self.log(
-                        "\tDetector/monitor ratio: {:.4g}".format(self.count_ratio)
+                        f"\tDetector/monitor ratio: {self.count_ratio:.4g}"
                     )
 
                 if self.monitor_value is not None:
@@ -296,9 +295,7 @@ class SansData:
                 else:
                     self.I_0 = self.measurement_count / self.measurement_time
                 self.log(
-                    "\tAverage detector intensity: {:.4g} n/s".format(
-                        self.measurement_count / self.measurement_time
-                    )
+                    f"\tAverage detector intensity: {self.measurement_count / self.measurement_time:.4g} n/s"
                 )
 
         self.I = self.raw_intensity / self.measurement_time

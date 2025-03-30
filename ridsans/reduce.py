@@ -1,12 +1,12 @@
-from mantid.simpleapi import *
+import numpy as np
 from mantid.api import *
 from mantid.kernel import *
-import numpy as np
-from ridsans.sansdata import active_w, active_h
+from mantid.simpleapi import *
+
+from ridsans.sansdata import active_w
 
 
 def mask_rectangle(ws, w, h, negative=False, offset_x=0, offset_y=0):
-    # Gets large for a 1024 x 1024 detector but at most ~30 MB
     mask_list = []
     for i in range(ws.getNumberHistograms()):
         detector = ws.getDetector(i)
@@ -21,7 +21,6 @@ def mask_rectangle(ws, w, h, negative=False, offset_x=0, offset_y=0):
 
 
 def mask_circle(ws, r, negative=False, offset_x=0, offset_y=0):
-    # Gets large for a 1024 x 1024 detector but at most ~30 MB
     mask_list = []
     for i in range(ws.getNumberHistograms()):
         detector = ws.getDetector(i)
@@ -71,7 +70,7 @@ def reduction_setup_RIDSANS(
 
 
 def reduce_RIDSANS_1D(ws_sample, ws_pixel_adj, output_workspace=None):
-    """Performs a 1D reduction of the measurement. This assumes reduction_setup_RIDSANS has been run before. The resulting workspace represe nts the macroscopic cross-section over sample thickness t."""
+    """Performs a 1D reduction of the measurement. This assumes reduction_setup_RIDSANS has been run before. The resulting workspace represents the macroscopic cross-section over sample thickness t."""
     # Directly get the sample position
     sample_position = ws_sample.getInstrument().getSample().getPos()
 
@@ -81,8 +80,6 @@ def reduce_RIDSANS_1D(ws_sample, ws_pixel_adj, output_workspace=None):
     )
     L_bins = ws_sample.dataX(0)
     L0 = (L_bins[1] + L_bins[0]) / 2
-    # max_det_x = 0.140662/2
-    # max_det_y = 0.140662/2
     ds_dist = -sample_position.Z()
     r = active_w / 2
     Q_max = 4 * np.pi / L0 * np.sin(np.arctan(r / (ds_dist)) / 2)  # AA-1
@@ -102,7 +99,7 @@ def reduce_RIDSANS_1D(ws_sample, ws_pixel_adj, output_workspace=None):
 
 
 def reduce_RIDSANS_2D(ws_sample, ws_pixel_adj, output_workspace=None):
-    """Performs a 1D reduction of the measurement. This assumes reduction_setup_RIDSANS has been run before. The resulting workspace represe nts the macroscopic cross-section over sample thickness t."""
+    """Performs a 2D reduction of the measurement. This assumes reduction_setup_RIDSANS has been run before. Assuming the sample thickness t has already been divided out of the ws_sample workspace, the output represents the macroscopic cross-section."""
 
     # Directly get the sample position
     sample_position = ws_sample.getInstrument().getSample().getPos()
@@ -118,8 +115,6 @@ def reduce_RIDSANS_2D(ws_sample, ws_pixel_adj, output_workspace=None):
     Q_max = 4 * np.pi / L0 * np.sin(np.arctan(r / (ds_dist)) / 2)
     Q_max  # AA-1
     delta_Q = Q_max / 100
-    # max_QXY = 0.01
-    # N_Q_bins = int(np.floor(2*Q_max/delta_Q)+2)
     name = ws_sample.name() + "_dSigma/dOmega_2D"
     if output_workspace is not None:
         name = output_workspace

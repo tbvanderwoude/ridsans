@@ -1,6 +1,5 @@
 from ridsans.batch_processing import *
 from ridsans.reduce import *
-from mantid.api import AnalysisDataService as ADS
 
 # mask_workspace = ADS.retrieve('MaskWorkspace')
 for index in range(4, 8):

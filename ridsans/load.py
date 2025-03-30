@@ -1,8 +1,9 @@
-from mantid.simpleapi import *
 from mantid.api import *
 from mantid.kernel import *
-from ridsans.sansdata import *
+from mantid.simpleapi import *
+
 from ridsans.load_util import *
+from ridsans.sansdata import *
 
 
 def create_pixel_adj_workspace(pixel_efficiencies, bins, detectors):

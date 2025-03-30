@@ -1,5 +1,6 @@
-from ridsans.sansdata import *
 from multiprocessing import Pool
+
+from ridsans.sansdata import *
 
 
 def option_map(file_name):

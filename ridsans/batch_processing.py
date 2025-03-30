@@ -1,7 +1,9 @@
-import pandas as pd
 from pathlib import Path
-from ridsans.load import *
+
+import pandas as pd
 from mantid.api import AnalysisDataService as ADS
+
+from ridsans.load import *
 
 
 def load_batchfile_index_workspaces(

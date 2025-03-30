@@ -1,6 +1,6 @@
-from mantid.simpleapi import *
 from mantid.api import *
 from mantid.kernel import *
+from mantid.simpleapi import *
 
 
 def save(workspace, file_name=None):
