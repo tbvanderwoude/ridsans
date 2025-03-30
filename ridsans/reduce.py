@@ -7,6 +7,7 @@ from ridsans.sansdata import active_w
 
 
 def mask_rectangle(ws, w, h, negative=False, offset_x=0, offset_y=0):
+    """Masks a rectangle of a given width and height centered at an offset on a given workspace."""
     mask_list = []
     for i in range(ws.getNumberHistograms()):
         detector = ws.getDetector(i)
@@ -21,6 +22,7 @@ def mask_rectangle(ws, w, h, negative=False, offset_x=0, offset_y=0):
 
 
 def mask_circle(ws, r, negative=False, offset_x=0, offset_y=0):
+    """Masks a circle of a given radius centered at an offset on a given workspace."""
     mask_list = []
     for i in range(ws.getNumberHistograms()):
         detector = ws.getDetector(i)
