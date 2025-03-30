@@ -246,7 +246,7 @@ class SansData:
         if self.keep_all_counts:
             self.raw_intensity = np.flip(cdat_2d, axis=0)
         else:
-            # Selects only active detector region pixels (a 550 x 550 region)
+            # Selects only active detector region pixels (a 552 x 552 region)
             self.raw_intensity = np.flip(
                 cdat_2d[crop_y_start:crop_y_end, crop_x_start:crop_x_end],
                 axis=0,
