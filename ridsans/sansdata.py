@@ -24,14 +24,16 @@ def rpm_to_lambda(x, a, b):
 
 rpm_converter = lambda rpm: rpm_to_lambda(rpm, a_fit, b_fit)
 
-def rebin2d(arr,n):
+
+def rebin2d(arr, n):
     rows, cols = arr.shape
     if rows % n != 0 or cols % n != 0:
         print(f"Array dimensions are not divisible by {n}, trimming remainder")
-        x_lim = (rows//n) * n
-        y_lim = (cols//n) * n
-        arr = arr[:x_lim,:y_lim]
-    return arr.reshape(rows//n, n, cols//n, n).sum(axis=(1,3))
+        x_lim = (rows // n) * n
+        y_lim = (cols // n) * n
+        arr = arr[:x_lim, :y_lim]
+    return arr.reshape(rows // n, n, cols // n, n).sum(axis=(1, 3))
+
 
 def get_closest_Q_range(uncorrected_distance, tolerance=5):
     """Determines what the Q range is of the measurement"""
@@ -133,7 +135,12 @@ class Beamstop:
 
 class SansData:
     def __init__(
-        self, filename, log_process=False, keep_all_counts=False, rebin = True, image_code="CDAT2"
+        self,
+        filename,
+        log_process=False,
+        keep_all_counts=False,
+        rebin=True,
+        image_code="CDAT2",
     ):
         self.monitor_value = None
         self.log_process = log_process
@@ -147,7 +154,7 @@ class SansData:
             self.pixel_count = 1024 * 1024
         else:
             if self.rebin:
-                self.pixel_count = active_w_pixels * active_w_pixels//16
+                self.pixel_count = active_w_pixels * active_w_pixels // 16
             else:
                 self.pixel_count = active_w_pixels * active_w_pixels
         self.load_data(filename)
