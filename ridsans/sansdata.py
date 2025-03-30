@@ -5,8 +5,9 @@ from math import pi as pi
 import re
 from pathlib import Path
 
-active_w_pixels = 568
-cropped_extent = [233, 233 + active_w_pixels, 233, 233 + active_w_pixels]
+active_w_pixels = 552
+cropped_extent = [235, 235 + active_w_pixels, 239, 239 + active_w_pixels]
+crop_y_start, crop_y_end, crop_x_start, crop_x_end = cropped_extent
 
 # The numbers represent FZZ in the 4 sample positions
 # This is needed because FZZ is not always present in the .mpa files
@@ -245,11 +246,9 @@ class SansData:
         if self.keep_all_counts:
             self.raw_intensity = np.flip(cdat_2d, axis=0)
         else:
-            # self.pixel_count = active_w_pixels * active_w_pixels
-            # Selects only active detector region pixels (a 568 x 568 region)
-            # TODO: makes this customizable and not hardcoded
+            # Selects only active detector region pixels (a 550 x 550 region)
             self.raw_intensity = np.flip(
-                cdat_2d[233 : 233 + active_w_pixels, 233 : 233 + active_w_pixels],
+                cdat_2d[crop_y_start:crop_y_end, crop_x_start:crop_x_end],
                 axis=0,
             )
             if self.rebin:
