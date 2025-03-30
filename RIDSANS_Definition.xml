@@ -3,8 +3,8 @@
 	    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	    name="RIDSANS"
 	    valid-from="2024-10-22 00:00:00"
-	    valid-to="2110-10-10 10:13:12"
-	    last-modified="2024-10-22 13:50:00.000000"
+	    valid-to="2110-10-10 13:12:00"
+	    last-modified="2024-03-30 13:12:00.000000"
 	    xsi:schemaLocation="http://www.mantidproject.org/IDF/1.0 http://schema.mantidproject.org/IDF/1.0/IDFSchema.xsd">
   <!--Created by Thom van der Woude, tbvanderwoude@protonmail.com-->
   <defaults>
@@ -32,23 +32,23 @@
   <!---->
   <type name="pixel" is="detector">
     <cuboid id="shape">
-      <left-front-bottom-point x="0.000528169014084507" y="-0.000528169014084507" z="0.0"  />
-      <left-front-top-point  x="0.000528169014084507" y="-0.000528169014084507" z="0.000005"  />
-      <left-back-bottom-point  x="-0.000528169014084507" y="-0.000528169014084507" z="0.0"  />
-      <right-front-bottom-point  x="0.000528169014084507" y="0.000528169014084507" z="0.0"  />
+      <left-front-bottom-point x="0.002173913043478261" y="-0.002173913043478261" z="0.0"  />
+      <left-front-top-point  x="0.002173913043478261" y="-0.002173913043478261" z="0.000005"  />
+      <left-back-bottom-point  x="-0.002173913043478261" y="-0.002173913043478261" z="0.0"  />
+      <right-front-bottom-point  x="0.002173913043478261" y="0.002173913043478261" z="0.0"  />
     </cuboid>
     <algebra val="shape" />
   </type>
 
   <type name="detector-bank" is="RectangularDetector" type="pixel"
-    xpixels="568" xstart="-0.29947183098591545" xstep="0.001056338028169014"
-    ypixels="568" ystart="-0.29947183098591545" ystep="0.001056338028169014" >
+    xpixels="138" xstart="-0.29782608695652174" xstep="0.004347826086956522"
+    ypixels="138" ystart="-0.29782608695652174" ystep="0.004347826086956522" >
   </type>
 
   <!---->
   <!--COMPONENT: 2D square detector bank-->
   <!---->
-  <component type="detector-bank" idstart="0" idfillbyfirst="x" idstep="1" idstepbyrow="568">
+  <component type="detector-bank" idstart="0" idfillbyfirst="x" idstep="1" idstepbyrow="138">
       <location x="0.0" y="0.0" z="0.0"/>
   </component>
 </instrument>

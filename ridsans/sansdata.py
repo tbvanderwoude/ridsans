@@ -5,8 +5,9 @@ from math import pi as pi
 import re
 from pathlib import Path
 
-active_w_pixels = 568
-cropped_extent = [233, 233 + active_w_pixels, 233, 233 + active_w_pixels]
+active_w_pixels = 552
+cropped_extent = [235, 235 + active_w_pixels, 239, 239 + active_w_pixels]
+crop_y_start, crop_y_end, crop_x_start, crop_x_end = cropped_extent
 
 # The numbers represent FZZ in the 4 sample positions
 # This is needed because FZZ is not always present in the .mpa files
@@ -23,6 +24,14 @@ def rpm_to_lambda(x, a, b):
 
 rpm_converter = lambda rpm: rpm_to_lambda(rpm, a_fit, b_fit)
 
+def rebin2d(arr,n):
+    rows, cols = arr.shape
+    if rows % n != 0 or cols % n != 0:
+        print(f"Array dimensions are not divisible by {n}, trimming remainder")
+        x_lim = (rows//n) * n
+        y_lim = (cols//n) * n
+        arr = arr[:x_lim,:y_lim]
+    return arr.reshape(rows//n, n, cols//n, n).sum(axis=(1,3))
 
 def get_closest_Q_range(uncorrected_distance, tolerance=5):
     """Determines what the Q range is of the measurement"""
@@ -124,20 +133,25 @@ class Beamstop:
 
 class SansData:
     def __init__(
-        self, filename, log_process=False, keep_all_counts=False, image_code="CDAT2"
+        self, filename, log_process=False, keep_all_counts=False, rebin = True, image_code="CDAT2"
     ):
         self.monitor_value = None
         self.log_process = log_process
         self.keep_all_counts = keep_all_counts
         self.image_code = image_code
+        self.rebin = rebin
         self.log(f"=== Loading RIDSANS measurement file: {filename} ===")
         self.filename = filename
         self.name = Path(filename).stem
-        self.load_data(filename)
         if keep_all_counts:
             self.pixel_count = 1024 * 1024
         else:
-            self.pixel_count = active_w_pixels * active_w_pixels
+            if self.rebin:
+                self.pixel_count = active_w_pixels * active_w_pixels//16
+            else:
+                self.pixel_count = active_w_pixels * active_w_pixels
+        self.load_data(filename)
+
         self.log(f"Pixel count: {self.pixel_count}")
 
         # Define the distances based on the provided geometry (in mm)
@@ -232,13 +246,15 @@ class SansData:
         if self.keep_all_counts:
             self.raw_intensity = np.flip(cdat_2d, axis=0)
         else:
-            self.pixel_count = active_w_pixels * active_w_pixels
-            # Selects only active detector region pixels (a 568 x 568 region)
-            # TODO: makes this customizable and not hardcoded
+            # Selects only active detector region pixels (a 550 x 550 region)
             self.raw_intensity = np.flip(
-                cdat_2d[233 : 233 + active_w_pixels, 233 : 233 + active_w_pixels],
+                cdat_2d[crop_y_start:crop_y_end, crop_x_start:crop_x_end],
                 axis=0,
             )
+            if self.rebin:
+                self.raw_intensity = rebin2d(self.raw_intensity, 4)
+            rows, cols = self.raw_intensity.shape
+            self.log(f"Dimension of clipped counts: {rows} x {cols}")
             assert self.pixel_count == len(self.raw_intensity.flatten())
 
         # The following extracts the measurement time and total counts from under the [CHN2] header
