@@ -1,4 +1,5 @@
 from mantid.api import *
+from mantid.api import AnalysisDataService as ADS
 from mantid.kernel import *
 from mantid.simpleapi import *
 
@@ -11,13 +12,16 @@ def create_pixel_adj_workspace(pixel_efficiencies, bins, detectors):
     x = np.tile(bins, detectors)
     y = pixel_efficiencies
     y[y <= 0] = 1
-    pixel_adj = CreateWorkspace(
-        OutputWorkspace="PixelAdj",
-        UnitX="Wavelength",
-        DataX=x,
-        DataY=y,
-        NSpec=detectors,
-    )
+    try:
+        pixel_adj = ADS.retrieve("PixelAdj")
+    except KeyError:
+        pixel_adj = CreateWorkspace(
+            OutputWorkspace="PixelAdj",
+            UnitX="Wavelength",
+            DataX=x,
+            DataY=y,
+            NSpec=detectors,
+        )
     return pixel_adj
 
 
