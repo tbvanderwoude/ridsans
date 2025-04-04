@@ -13,7 +13,7 @@ def load_batchfile_index_workspaces(
     directory="data",
     force_reload=False,
 ):
-    """Given a row index (starting at 0), this will read the provided batchfile and retrieve the workspaces either by loading them or 
+    """Given a row index (starting at 0), this will read the provided batchfile and retrieve the workspaces either by loading them or
     retrieving them from the AnalysisDataService if available and force_reload is not set."""
     try:
         # Emulate absent workspace when force_reload is set

@@ -10,3 +10,4 @@ __pycache__/
 *.txt
 *.gz
 ridsans.egg-info
+*_mask.xml

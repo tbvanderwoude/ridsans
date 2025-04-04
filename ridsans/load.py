@@ -73,7 +73,7 @@ def workspace_from_measurement(
     bins,
     detectors,
 ):
-    """Reduces the different measurements to a single corrected intensity following a formalism similar to that discussed in 
+    """Reduces the different measurements to a single corrected intensity following a formalism similar to that discussed in
     Dewhurst, C. D. (2023). J. Appl. Cryst. 56, 1595-1609. It returns this reduced scattering workspace in addition to a monitor
     object which is currently not used and the id of the Q range (1 - 4 currently).
     """

@@ -16,6 +16,7 @@ def load_config(filename="instrument_config.yaml"):
     with open(filepath) as file:
         return yaml.safe_load(file)
 
+
 # Load the configuration automatically when the module is imported
 config = load_config()
 
@@ -35,6 +36,7 @@ active_h = float(config["active_h"])
 
 def rpm_to_lambda(x, a, b):
     return a / x + b
+
 
 def rpm_converter(rpm):
     return rpm_to_lambda(rpm, a_fit, b_fit)
@@ -268,7 +270,7 @@ class SansData:
             self.log(f"Dimension of clipped counts: {rows} x {cols}")
             assert self.pixel_count == len(self.raw_intensity.flatten())
 
-        # The following extracts the measurement time and total counts from under the 
+        # The following extracts the measurement time and total counts from under the
         # [CHN2] header
         r = re.compile("\[CHN\d*\]")
         sequence_headers = list(
@@ -285,13 +287,12 @@ class SansData:
                 self.log(f"\tTotal counts: {self.measurement_count}")
                 if self.monitor_value is not None:
                     self.log(f"\tMonitor counts: {self.monitor_value}")
-                    self.log(f"\tMonitor intensity: {self.monitor_value / self.measurement_time:.4g} n/s"
+                    self.log(
+                        f"\tMonitor intensity: {self.monitor_value / self.measurement_time:.4g} n/s"
                     )
 
                     self.count_ratio = self.measurement_count / self.monitor_value
-                    self.log(
-                        f"\tDetector/monitor ratio: {self.count_ratio:.4g}"
-                    )
+                    self.log(f"\tDetector/monitor ratio: {self.count_ratio:.4g}")
 
                 if self.monitor_value is not None:
                     self.I_0 = self.monitor_value / self.measurement_time
@@ -306,8 +307,8 @@ class SansData:
         self.dI = np.sqrt(self.raw_intensity) / self.measurement_time
 
     def load_scaler_a(self, lines):
-        """Currently, the whole purpose of loading the SCALER A section is to 
-        extract the monitor reading. """
+        """Currently, the whole purpose of loading the SCALER A section is to
+        extract the monitor reading."""
         # Locate the [SCALER A] header in the file
         scaler_a_index = next(
             (i for i, line in enumerate(lines) if line.strip() == "[SCALER A]"), None
