@@ -35,14 +35,17 @@ active_h = float(config["active_h"])
 
 
 def rpm_to_lambda(x, a, b):
+    """General form of relation mapping velocity selector RPM (x) to a wavelength lambda"""
     return a / x + b
 
 
 def rpm_converter(rpm):
+    """RPM to wavelength converter for the specific velocity selector using fitted coefficients stored in the configuration file."""
     return rpm_to_lambda(rpm, a_fit, b_fit)
 
 
 def rebin2d(arr, n):
+    """Rebins a 2D numpy array using n x n bins, trimming any possible remainder"""
     rows, cols = arr.shape
     if rows % n != 0 or cols % n != 0:
         print(f"Array dimensions are not divisible by {n}, trimming remainder")
@@ -125,6 +128,8 @@ def plot_projections(I, extent=cropped_extent):
     plt.show()
 
 
+# This is a stub for automatically mapping beamstop parameters given in the .mpa file to a Beamstop object
+# Some difficulties were encountered getting this to work in general but this should be possible in the future
 class Beamstop:
     def __init__(self, large_x, small_x, y):
         self.large = abs(large_x) <= abs(small_x)
@@ -175,11 +180,13 @@ class SansData:
         self.log(f"Pixel count: {self.pixel_count}")
 
     def log(self, s):
+        """Prints whatever is passed to it if log_process is enabled."""
         if self.log_process:
             # This could instead be written to a file
             print(s)
 
     def load_data(self, filename):
+        """Main method for reading and parsing the .mpa file."""
         with open(filename) as f:
             lines = list(f)
         self.filename = filename
@@ -189,6 +196,7 @@ class SansData:
         header_end = next(
             (x[0] for x in enumerate(lines) if x[1].startswith("[MCS8A A]")), None
         )
+
         if header_end == 0:
             self.log("No header was found, assuming this is a background measurement")
             for key in FZZ_map:
@@ -350,6 +358,7 @@ class SansData:
             self.log("Could not find sc#01")
 
     def load_float_with_default(self, name, default):
+        """Helper function for getting a default value if a key is not found in the dictionary."""
         if name in self.header_params:
             return float(self.header_params[name])
         else:
@@ -359,20 +368,24 @@ class SansData:
             return default
 
     def load_distance(self):
+        """Loads FZZ with a default value of 3.4 m."""
         return self.load_float_with_default("FZZ", 3400)
 
     def load_velocity_selector(self):
+        """Loads velocity selector RPM with default of 21506 RPM."""
         return self.load_float_with_default("SpeedVS", 21506)
 
     def plot_integrated_intensity(
         self, intensity=None, axis=0, title="Integrated Intensity", filename=None
     ):
+        """Helper function for plotting the two projections of counts."""
         extent = cropped_extent
         if self.keep_all_counts:
             extent = [0, 1024, 0, 1024]
         plot_projections(self.I, extent)
 
     def plot_2d(self, plot_centre_cross=True):
+        """Helper function for plotting counts in 2D."""
         extent = cropped_extent
         if self.keep_all_counts:
             extent = [0, 1024, 0, 1024]
