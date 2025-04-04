@@ -1,8 +1,9 @@
-from mantid.simpleapi import *
 from mantid.api import *
 from mantid.kernel import *
-from ridsans.sansdata import *
+from mantid.simpleapi import *
+
 from ridsans.load_util import *
+from ridsans.sansdata import *
 
 
 def create_pixel_adj_workspace(pixel_efficiencies, bins, detectors):
@@ -56,6 +57,7 @@ def monochromatic_workspace(name, I, detector_position, bins, detectors, error=N
 
 
 def workspace_from_sansdata(sansdata, bins, detectors):
+    """Helper function to pass SansData fields into monochromatic_workspace"""
     return monochromatic_workspace(
         sansdata.name, sansdata.I, sansdata.d, bins, detectors
     )
@@ -71,7 +73,10 @@ def workspace_from_measurement(
     bins,
     detectors,
 ):
-    """Creates a workspace with scaled intensity in counts/s"""
+    """Reduces the different measurements to a single corrected intensity following a formalism similar to that discussed in
+    Dewhurst, C. D. (2023). J. Appl. Cryst. 56, 1595-1609. It returns this reduced scattering workspace in addition to a monitor
+    object which is currently not used and the id of the Q range (1 - 4 currently).
+    """
     # Transmission factor of sample and can together
     T_sample_can = compute_transmission_factor(sample_transmission, direct)
     # Can (container) transmission factor
@@ -174,6 +179,7 @@ def load_RIDSANS_from_sansdata(
     background,
     relative_pixel_efficiency,
 ):
+    """This is used by load_RIDSANS, taking SansData objects instead of filenames."""
     bins = create_monochrom_bin_bounds(sample_scatter.L0)
     detectors = sample_scatter.pixel_count
     pixel_adj = create_pixel_adj_workspace(relative_pixel_efficiency, bins, detectors)

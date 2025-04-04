@@ -1,12 +1,13 @@
-from mantid.simpleapi import *
+import numpy as np
 from mantid.api import *
 from mantid.kernel import *
-import numpy as np
-from ridsans.sansdata import active_w, active_h
+from mantid.simpleapi import *
+
+from ridsans.sansdata import active_w
 
 
 def mask_rectangle(ws, w, h, negative=False, offset_x=0, offset_y=0):
-    # Gets large for a 1024 x 1024 detector but at most ~30 MB
+    """Masks a rectangle of a given width and height centered at an offset on a given workspace."""
     mask_list = []
     for i in range(ws.getNumberHistograms()):
         detector = ws.getDetector(i)
@@ -21,7 +22,7 @@ def mask_rectangle(ws, w, h, negative=False, offset_x=0, offset_y=0):
 
 
 def mask_circle(ws, r, negative=False, offset_x=0, offset_y=0):
-    # Gets large for a 1024 x 1024 detector but at most ~30 MB
+    """Masks a circle of a given radius centered at an offset on a given workspace."""
     mask_list = []
     for i in range(ws.getNumberHistograms()):
         detector = ws.getDetector(i)
@@ -35,17 +36,23 @@ def mask_circle(ws, r, negative=False, offset_x=0, offset_y=0):
     MaskDetectors(Workspace=ws, SpectraList=mask_list)
 
 
-def reduction_setup_RIDSANS(ws_sample, ws_direct, ROI=None, mask_workspace=None):
-    """Finds the beam center and applies a mask"""
+def reduction_setup_RIDSANS(
+    ws_sample, ws_direct, ROI=None, mask_workspace=None, center_workspace=None
+):
+    """Finds the beam center if no center_workspace is provided and optionally applies a mask"""
     # STEP 1: find beam centre from direct beam
     # Compute the center position, which will be put in a table workspace
 
     # Uses direct beam method
-    center = FindCenterOfMassPosition(ws_direct, Output="center", Tolerance=0.0005)
+    if center_workspace is None:
+        center = FindCenterOfMassPosition(ws_direct, Output="center", Tolerance=0.0005)
+    else:
+        center = center_workspace
     center_x, center_y = center.column(1)
     print(f"(x, y) = ({center_x:.4f}, {center_y:.4f})")
+
     # Idea: move detector based on beamstop position to compensate for shift
-    # Question: does this actually make sense?
+    # Does this actually make sense? It seems to be only valid assuming a small shift
     MoveInstrumentComponent(
         ws_sample,
         ComponentName="detector-bank",
@@ -65,7 +72,7 @@ def reduction_setup_RIDSANS(ws_sample, ws_direct, ROI=None, mask_workspace=None)
 
 
 def reduce_RIDSANS_1D(ws_sample, ws_pixel_adj, output_workspace=None):
-    """Performs a 1D reduction of the measurement. This assumes reduction_setup_RIDSANS has been run before. The resulting workspace represe nts the macroscopic cross-section over sample thickness t."""
+    """Performs a 1D reduction of the measurement. This assumes reduction_setup_RIDSANS has been run before. The resulting workspace represents the macroscopic cross-section over sample thickness t."""
     # Directly get the sample position
     sample_position = ws_sample.getInstrument().getSample().getPos()
 
@@ -75,8 +82,6 @@ def reduce_RIDSANS_1D(ws_sample, ws_pixel_adj, output_workspace=None):
     )
     L_bins = ws_sample.dataX(0)
     L0 = (L_bins[1] + L_bins[0]) / 2
-    # max_det_x = 0.140662/2
-    # max_det_y = 0.140662/2
     ds_dist = -sample_position.Z()
     r = active_w / 2
     Q_max = 4 * np.pi / L0 * np.sin(np.arctan(r / (ds_dist)) / 2)  # AA-1
@@ -96,7 +101,7 @@ def reduce_RIDSANS_1D(ws_sample, ws_pixel_adj, output_workspace=None):
 
 
 def reduce_RIDSANS_2D(ws_sample, ws_pixel_adj, output_workspace=None):
-    """Performs a 1D reduction of the measurement. This assumes reduction_setup_RIDSANS has been run before. The resulting workspace represe nts the macroscopic cross-section over sample thickness t."""
+    """Performs a 2D reduction of the measurement. This assumes reduction_setup_RIDSANS has been run before. Assuming the sample thickness t has already been divided out of the ws_sample workspace, the output represents the macroscopic cross-section."""
 
     # Directly get the sample position
     sample_position = ws_sample.getInstrument().getSample().getPos()
@@ -110,10 +115,7 @@ def reduce_RIDSANS_2D(ws_sample, ws_pixel_adj, output_workspace=None):
     ds_dist = -sample_position.Z()
     r = active_w / 2
     Q_max = 4 * np.pi / L0 * np.sin(np.arctan(r / (ds_dist)) / 2)
-    Q_max  # AA-1
     delta_Q = Q_max / 100
-    # max_QXY = 0.01
-    # N_Q_bins = int(np.floor(2*Q_max/delta_Q)+2)
     name = ws_sample.name() + "_dSigma/dOmega_2D"
     if output_workspace is not None:
         name = output_workspace

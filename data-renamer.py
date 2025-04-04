@@ -1,5 +1,5 @@
-import os
 import argparse
+import os
 
 
 def rename_files_in_directory(directory):
@@ -9,7 +9,7 @@ def rename_files_in_directory(directory):
 
         # Only process files (skip directories)
         if os.path.isfile(file_path):
-            with open(file_path, "r") as file:
+            with open(file_path) as file:
                 for line in file:
                     if line.startswith("Sample="):
                         # Extract the sample name

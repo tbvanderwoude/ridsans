@@ -1,0 +1,28 @@
+# This configuration file sets up the main instrument parameters
+# for use in the sansdata module
+
+# The number of active pixels in width
+active_w_pixels: 552
+
+# Define the cropped extent:
+# [crop_y_start, crop_y_end, crop_x_start, crop_x_end]
+# Here crop_y_end and crop_x_end are computed as starting values plus active_w_pixels
+cropped_extent: [235, 787, 239, 791]  # 787 = 235 + 552, 791 = 239 + 552
+
+# The numbers represent FZZ in the 4 sample positions (FZZ might not always be present in .mpa files)
+# This is primarily used in get_closest_Q_range, which finds the Q range
+# number 1 - 4 from the file parameters, as well as some logic to infer the sample to detector
+# distance from the filename if this is missing from the .mpa file
+FZZ_map:
+  Q1: 9742.34272 # mm
+  Q2: 7427.9968 # mm
+  Q3: 3422.98528 # mm
+  Q4: 1432.00036 # mm
+
+# From velocity selector characterization
+a_fit: 1.27085576e05  # AA / RPM
+b_fit: 3.34615760e-03  # AA
+
+# Active dimensions
+active_w: 0.6  # m
+active_h: 0.6  # m

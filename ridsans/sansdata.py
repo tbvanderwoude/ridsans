@@ -1,31 +1,51 @@
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.colors as mcolors
-from math import pi as pi
+import os
 import re
+from math import pi as pi
 from pathlib import Path
 
-active_w_pixels = 552
-cropped_extent = [235, 235 + active_w_pixels, 239, 239 + active_w_pixels]
+import matplotlib.colors as mcolors
+import matplotlib.pyplot as plt
+import numpy as np
+import yaml
+
+
+def load_config(filename="instrument_config.yaml"):
+    """Load configuration from a YAML file."""
+    base_dir = os.path.dirname(__file__)
+    filepath = os.path.join(base_dir, filename)
+    with open(filepath) as file:
+        return yaml.safe_load(file)
+
+
+# Load the configuration automatically when the module is imported
+config = load_config()
+
+# Convert to integers
+active_w_pixels = int(config["active_w_pixels"])
+cropped_extent = list(map(int, config["cropped_extent"]))
 crop_y_start, crop_y_end, crop_x_start, crop_x_end = cropped_extent
 
-# The numbers represent FZZ in the 4 sample positions
-# This is needed because FZZ is not always present in the .mpa files
-FZZ_map = {"Q1": 9742.34272, "Q2": 7427.9968, "Q3": 3422.98528, "Q4": 1432.00036}
+FZZ_map = config["FZZ_map"]
 
-# From velocity selector characterization
-a_fit = 1.27085576e05  # AA / RPM
-b_fit = 3.34615760e-03  # AA
+# Convert to floats
+a_fit = float(config["a_fit"])
+b_fit = float(config["b_fit"])
+active_w = float(config["active_w"])
+active_h = float(config["active_h"])
 
 
 def rpm_to_lambda(x, a, b):
+    """General form of relation mapping velocity selector RPM (x) to a wavelength lambda"""
     return a / x + b
 
 
-rpm_converter = lambda rpm: rpm_to_lambda(rpm, a_fit, b_fit)
+def rpm_converter(rpm):
+    """RPM to wavelength converter for the specific velocity selector using fitted coefficients stored in the configuration file."""
+    return rpm_to_lambda(rpm, a_fit, b_fit)
 
 
 def rebin2d(arr, n):
+    """Rebins a 2D numpy array using n x n bins, trimming any possible remainder"""
     rows, cols = arr.shape
     if rows % n != 0 or cols % n != 0:
         print(f"Array dimensions are not divisible by {n}, trimming remainder")
@@ -50,10 +70,6 @@ def get_closest_Q_range(uncorrected_distance, tolerance=5):
         )
 
     return closest_key, error
-
-
-active_w = 0.6  # m
-active_h = 0.6  # m
 
 
 def plot_I(I, plot_centre_cross=True, extent=cropped_extent):
@@ -112,6 +128,8 @@ def plot_projections(I, extent=cropped_extent):
     plt.show()
 
 
+# This is a stub for automatically mapping beamstop parameters given in the .mpa file to a Beamstop object
+# Some difficulties were encountered getting this to work in general but this should be possible in the future
 class Beamstop:
     def __init__(self, large_x, small_x, y):
         self.large = abs(large_x) <= abs(small_x)
@@ -161,22 +179,14 @@ class SansData:
 
         self.log(f"Pixel count: {self.pixel_count}")
 
-        # Define the distances based on the provided geometry (in mm)
-        self.distances = {
-            "D_to_DS": 1320 + 0,  # Distance from diaphragm to sample, + PosFzz
-            "DS_to_S": 1320,  # Distance from DS to Sample
-            "DS_to_KB3": 2802,  # Distance from Sample to KB3
-            "DS_to_KB2": 4793,  # Distance from KB3 to KB2
-            "DS_to_KB1": 8798,  # Distance from KB2 to KB1
-            "DS_to_PB1": 11606,  # Distance from KB1 to P01
-        }
-
     def log(self, s):
+        """Prints whatever is passed to it if log_process is enabled."""
         if self.log_process:
             # This could instead be written to a file
             print(s)
 
     def load_data(self, filename):
+        """Main method for reading and parsing the .mpa file."""
         with open(filename) as f:
             lines = list(f)
         self.filename = filename
@@ -186,9 +196,10 @@ class SansData:
         header_end = next(
             (x[0] for x in enumerate(lines) if x[1].startswith("[MCS8A A]")), None
         )
+
         if header_end == 0:
             self.log("No header was found, assuming this is a background measurement")
-            for key in FZZ_map.keys():
+            for key in FZZ_map:
                 if key in self.filename:
                     self.d = (FZZ_map[key] + 1320) / 1e3
                     self.Q_range_index = key[1:]
@@ -204,17 +215,18 @@ class SansData:
             # Extracts the Q range (value from 1 - 4)
             self.Q_range_index = closest_key[1:]
             self.d = (uncorrected_distance + 1320) / 1e3  # [m] 1320 is the offset
-            self.log("Detector to sample distance: {:.4g} m".format(self.d))
+            self.log(f"Detector to sample distance: {self.d:.4g} m")
 
             self.velocity_selector_speed = self.load_velocity_selector()  # RPM
             if self.velocity_selector_speed == 0:
                 self.log(
-                    "Velocity selector RPM appears to be 0, is this a background measurement?"
+                    "Velocity selector RPM appears to be 0,\
+                          is this a background measurement?"
                 )
                 self.L0 = None
             else:
                 self.L0 = rpm_converter(self.velocity_selector_speed)
-                self.log("lambda_0: {:.4g} Å".format(self.L0))
+                self.log(f"lambda_0: {self.L0:.4g} Å")
             # Create beamstop
             bs_large_x = float(self.header_params["BSXL"]) / 1e3  # m
             bs_small_x = float(self.header_params["BSXS"]) / 1e3  # m
@@ -228,7 +240,8 @@ class SansData:
 
         # Extract CDAT2 array from remaining file as raw detector counts
 
-        # Measurement data sequences look like [CDAT2,1048576] (regular expression: \[.DAT.,\d* \])
+        # Measurement data sequences look like [CDAT2,1048576]
+        # This translates to the regular expression: \[.DAT.,\d* \]
         r = re.compile("\[.DAT.,\d* \]")
         sequence_headers = list(filter(lambda x: r.match(x[1]), enumerate(lines)))
         # The CDAT2 count sequence is used to read 1024 x 1024 values
@@ -248,7 +261,8 @@ class SansData:
         )
         # Reshape 1D 1048576 array to 2D 1024 x 1024
         cdat_2d = np.reshape(cdat2, (1024, 1024))
-        # Transpose it to switch axes (I assume because it was column-major and needs to be row-major)
+        # Transpose it to switch axes (I assume because it was column-major and needs to
+        #  be row-major)
         # self.raw_intensity = np.transpose(cdat2_2d)
         if self.keep_all_counts:
             self.raw_intensity = np.flip(cdat_2d, axis=0)
@@ -264,7 +278,8 @@ class SansData:
             self.log(f"Dimension of clipped counts: {rows} x {cols}")
             assert self.pixel_count == len(self.raw_intensity.flatten())
 
-        # The following extracts the measurement time and total counts from under the [CHN2] header
+        # The following extracts the measurement time and total counts from under the
+        # [CHN2] header
         r = re.compile("\[CHN\d*\]")
         sequence_headers = list(
             filter(lambda x: r.match(x[1]), enumerate(lines[:data_start]))
@@ -276,29 +291,23 @@ class SansData:
                 numbers = re.findall(r"\d+\.\d+|\d+", report_str)
                 self.measurement_time = float(numbers[0])
                 self.measurement_count = int(numbers[1])
-                self.log("\tMeasurement time: {:.4g} s".format(self.measurement_time))
-                self.log("\tTotal counts: {}".format(self.measurement_count))
+                self.log(f"\tMeasurement time: {self.measurement_time:.4g} s")
+                self.log(f"\tTotal counts: {self.measurement_count}")
                 if self.monitor_value is not None:
-                    self.log("\tMonitor counts: {}".format(self.monitor_value))
+                    self.log(f"\tMonitor counts: {self.monitor_value}")
                     self.log(
-                        "\tMonitor intensity: {:.4g} n/s".format(
-                            self.monitor_value / self.measurement_time
-                        )
+                        f"\tMonitor intensity: {self.monitor_value / self.measurement_time:.4g} n/s"
                     )
 
                     self.count_ratio = self.measurement_count / self.monitor_value
-                    self.log(
-                        "\tDetector/monitor ratio: {:.4g}".format(self.count_ratio)
-                    )
+                    self.log(f"\tDetector/monitor ratio: {self.count_ratio:.4g}")
 
                 if self.monitor_value is not None:
                     self.I_0 = self.monitor_value / self.measurement_time
                 else:
                     self.I_0 = self.measurement_count / self.measurement_time
                 self.log(
-                    "\tAverage detector intensity: {:.4g} n/s".format(
-                        self.measurement_count / self.measurement_time
-                    )
+                    f"\tAverage detector intensity: {self.measurement_count / self.measurement_time:.4g} n/s"
                 )
 
         self.I = self.raw_intensity / self.measurement_time
@@ -306,6 +315,8 @@ class SansData:
         self.dI = np.sqrt(self.raw_intensity) / self.measurement_time
 
     def load_scaler_a(self, lines):
+        """Currently, the whole purpose of loading the SCALER A section is to
+        extract the monitor reading."""
         # Locate the [SCALER A] header in the file
         scaler_a_index = next(
             (i for i, line in enumerate(lines) if line.strip() == "[SCALER A]"), None
@@ -340,12 +351,14 @@ class SansData:
                     self.log("sc#01 = 0, ignoring")
             except ValueError:
                 raise ValueError(
-                    "Could not convert sc#01 to number, check the value in the file for irregularities"
+                    "Could not convert sc#01 to number, \
+                    check the value in the file for irregularities"
                 )
         else:
             self.log("Could not find sc#01")
 
     def load_float_with_default(self, name, default):
+        """Helper function for getting a default value if a key is not found in the dictionary."""
         if name in self.header_params:
             return float(self.header_params[name])
         else:
@@ -355,20 +368,24 @@ class SansData:
             return default
 
     def load_distance(self):
+        """Loads FZZ with a default value of 3.4 m."""
         return self.load_float_with_default("FZZ", 3400)
 
     def load_velocity_selector(self):
+        """Loads velocity selector RPM with default of 21506 RPM."""
         return self.load_float_with_default("SpeedVS", 21506)
 
     def plot_integrated_intensity(
         self, intensity=None, axis=0, title="Integrated Intensity", filename=None
     ):
+        """Helper function for plotting the two projections of counts."""
         extent = cropped_extent
         if self.keep_all_counts:
             extent = [0, 1024, 0, 1024]
         plot_projections(self.I, extent)
 
     def plot_2d(self, plot_centre_cross=True):
+        """Helper function for plotting counts in 2D."""
         extent = cropped_extent
         if self.keep_all_counts:
             extent = [0, 1024, 0, 1024]

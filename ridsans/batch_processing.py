@@ -1,7 +1,9 @@
-import pandas as pd
 from pathlib import Path
-from ridsans.load import *
+
+import pandas as pd
 from mantid.api import AnalysisDataService as ADS
+
+from ridsans.load import *
 
 
 def load_batchfile_index_workspaces(
@@ -11,7 +13,8 @@ def load_batchfile_index_workspaces(
     directory="data",
     force_reload=False,
 ):
-    """Get needed workspaces for reduction, retrieving these from the AnalysisDataService if available and force_reload is not set."""
+    """Given a row index (starting at 0), this will read the provided batchfile and retrieve the workspaces either by loading them or
+    retrieving them from the AnalysisDataService if available and force_reload is not set."""
     try:
         # Emulate absent workspace when force_reload is set
         if force_reload:
@@ -82,6 +85,7 @@ def get_workspace_data_from_batchfile_index(
 def get_file_data_from_batchfile_index(
     index, batch_filename="sans-batchfile.csv", directory="data"
 ):
+    """Gets the filenames needed to load the measurement workspaces."""
     batch = pd.read_csv(batch_filename)
     directory_path = Path(directory)
     row_list = dataframe_row_map(batch.iloc[index].tolist())

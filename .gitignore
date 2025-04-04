@@ -3,9 +3,11 @@ workshop-data/
 sample-data/
 test-data/
 latest-data/
+calibration-data/
 .conda
 *.nxs
 __pycache__/
 *.txt
 *.gz
 ridsans.egg-info
+*_mask.xml

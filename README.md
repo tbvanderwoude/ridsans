@@ -28,3 +28,6 @@ Make sure to do this within the previously created environment by activating it 
 
 ## Usage
 For usage instructions, have a look at the [manual](docs/manual.md).
+
+## Development
+[ruff](https://docs.astral.sh/ruff/) is used as a formatter and linter and can be installed using `pip install ruff`.
