@@ -21,11 +21,12 @@ def create_pixel_adj_workspace(pixel_efficiencies, bins, detectors):
     return pixel_adj
 
 
-def compute_transmission_factor(sample_transmission, direct):
+def compute_transmission_factor(sample_transmission, direct, background):
     """Compute tranmission factor assuming that the same attenuator is used, needs to be adjusted otherwise."""
     # Compensates for slight variations between beam intensity for sample and empty transmission measurements
     beam_variation_factor = direct.I_0 / sample_transmission.I_0
-    return np.sum(sample_transmission.I) / np.sum(direct.I) * beam_variation_factor
+    # It is important to correct for background to avoid overestimating the transmission
+    return np.sum(sample_transmission.I * beam_variation_factor - background.I) / np.sum(direct.I - background.I)
 
 
 def monochromatic_workspace(name, I, detector_position, bins, detectors, error=None):
@@ -78,7 +79,7 @@ def workspace_from_measurement(
     object which is currently not used and the id of the Q range (1 - 4 currently).
     """
     # Transmission factor of sample and can together
-    T_sample_can = compute_transmission_factor(sample_transmission, direct)
+    T_sample_can = compute_transmission_factor(sample_transmission, direct, background)
     # Can (container) transmission factor
     T_can = (
         1.0  # Ideally to be computed from can_transmission measurement, not present?
@@ -86,7 +87,7 @@ def workspace_from_measurement(
 
     # If can transmission measurement is included
     if can_transmission is not None:
-        T_can = compute_transmission_factor(can_transmission, direct)
+        T_can = compute_transmission_factor(can_transmission, direct, background)
 
     T_sample = T_sample_can / T_can
     print(f"Transmission factors: T_sample = {T_sample}; T_can = {T_can}")
