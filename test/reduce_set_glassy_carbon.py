@@ -1,21 +1,21 @@
 from ridsans.batch_processing import *
 from ridsans.reduce import *
 
-for index in range(0, 4):
-    ws_sample, ws_direct, mon, ws_pixel_adj, Q_range_index = (
-        load_batchfile_index_workspaces(
-            index,
-            "pixel-efficiency.txt.gz",
-            "test.csv",
-            directory="test-data",
-        )
-    )
+# This could also be a list like [0,1,2,3] or any other iterable
+indices = range(0, 4)
+workspaces = load_measurement_set_workspaces(
+    indices,
+    "pixel-efficiency.txt.gz",
+    "test.csv",
+    directory="test-data",
+)
+for ws_sample, ws_direct, _, ws_pixel_adj, Q_range_index in workspaces:
     mask = LoadMask(
         "RIDSANS_Definition.xml",
         f"Q{Q_range_index}_mask.xml",
         OutputWorkspace=f"Q{Q_range_index}_mask",
     )
-    print(index, ws_sample.name(), Q_range_index)
+    print(ws_sample.name(), Q_range_index)
 
     reduction_setup_RIDSANS(ws_sample, ws_direct, mask_workspace=mask)
 
