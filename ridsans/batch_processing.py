@@ -15,7 +15,7 @@ def load_measurement_set_workspaces(
 ):
     """Given indices of a measurement set, this will read the provided batchfile and retrieve the workspaces either by loading them or
     retrieving them from the AnalysisDataService if available and force_reload is not set. It will automatically detect which of the
-    indices corresponds to the widest Q range and use its measurement files for transmission factor calculation"""
+    indices corresponds to the widest Q range and use its measurement files for transmission factor calculation."""
     try:
         # Emulate absent workspace when force_reload is set
         if force_reload:

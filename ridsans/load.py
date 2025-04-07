@@ -71,6 +71,7 @@ def workspace_from_sansdata(sansdata, bins, detectors):
 
 
 def check_transmission_coefficients(T_sample, T_can):
+    """Checks transmission coefficients, giving hard errors for values outside of the 0 to 1 range and correctness warnings for low coefficients."""
     # Hard errors for T_sample, T_can outside of 0 to 1 range
     if T_sample < 0.0:
         raise ValueError("T_sample is negative, please check your input workspaces.")
@@ -200,7 +201,7 @@ def workspace_from_measurement(
         detectors,
         error=dI_corrected,
     )
-    # Including the transmissions as property of the workspace enables easy retrieval for transmission factor reuse.
+    # Including the transmissions as property of the workspace enables easy retrieval for transmission factor reuse
     ws.getRun().addProperty("T_sample", float(T_sample), True)
     ws.getRun().addProperty("T_can", float(T_can), True)
     return (
@@ -262,7 +263,7 @@ def load_RIDSANS(
     a direct measurement workspace for beam centre finding and a pixel adjustment workspace.
 
     Supports three variants of inputs:
-    - A sample scatter and transmission (for samples that don't need a container)
+    - A sample scatter and transmission (for samples that do not need a container)
     - A sample scatter and transmission and can scatter (neglects can transmission)
     - A sample and can scatter and transmission to make calculation of sample and can transmission factors possible
     """
