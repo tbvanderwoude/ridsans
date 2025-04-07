@@ -76,17 +76,25 @@ def check_transmission_coefficients(T_sample, T_can):
         raise ValueError("T_sample is negative, please check your input workspaces.")
     if T_sample > 1.0:
         # In principle, there are samples that could give a netto increase in neutrons...
-        raise ValueError("T_sample is greater than one, please check your input workspaces.")
+        raise ValueError(
+            "T_sample is greater than one, please check your input workspaces."
+        )
     if T_can < 0.0:
         raise ValueError("T_can is negative, please check your input workspaces.")
     if T_sample > 1.0:
-        raise ValueError("T_can is greater than one, please check your input workspaces.")
-    
+        raise ValueError(
+            "T_can is greater than one, please check your input workspaces."
+        )
+
     # Warnings for inadequate transmission coefficients, this indicates the single scattering limit does not exactly apply
-    if T_can <  0.8:
-        print(f"Warning: T_can is low (T_can = {T_can} < 0.8), multiple scattering cannot be neglected.")
-    if T_sample <  0.8:
-        print(f"Warning: T_sample is low (T_sample = {T_sample} < 0.8), multiple scattering cannot be neglected.")
+    if T_can < 0.8:
+        print(
+            f"Warning: T_can is low (T_can = {T_can} < 0.8), multiple scattering cannot be neglected."
+        )
+    if T_sample < 0.8:
+        print(
+            f"Warning: T_sample is low (T_sample = {T_sample} < 0.8), multiple scattering cannot be neglected."
+        )
 
 
 def workspace_from_measurement(
@@ -167,20 +175,22 @@ def workspace_from_measurement(
             # Per the formula, when the same transmission is used for sample and can scattering,
             # the background cancels...
             # TODO: verify this is allowed
-            I_corrected = (1 / T_sample * (sample_scatter.I - can_scatter.I * sample_can_ratio)) / I_0
+            I_corrected = (
+                1 / T_sample * (sample_scatter.I - can_scatter.I * sample_can_ratio)
+            ) / I_0
 
             # Ignore error T_sample, T_can and I_0
             # TODO: incorperate these errors for more accurate error calculation
-            dI_corrected = (
-                np.sqrt(sample_scatter.dI**2 + (can_scatter.dI * sample_can_ratio)**2) / (T_sample * I_0)
-            )
+            dI_corrected = np.sqrt(
+                sample_scatter.dI**2 + (can_scatter.dI * sample_can_ratio) ** 2
+            ) / (T_sample * I_0)
     else:
         # Assume no can is used as when using solid samples, crystals etc. or that its effect is ignored
         I_corrected = 1 / T_sample * (sample_scatter.I - background.I) / I_0
 
         # Ignore error T_sample and I_0
-        dI_corrected = (
-            np.sqrt(sample_scatter.dI**2 + background.dI**2) / (T_sample * I_0)
+        dI_corrected = np.sqrt(sample_scatter.dI**2 + background.dI**2) / (
+            T_sample * I_0
         )
     ws, mon = monochromatic_workspace(
         sample_scatter.name,
