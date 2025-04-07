@@ -168,7 +168,7 @@ def workspace_from_measurement(
             # Ignore error T_sample, T_can and I_0
             # TODO: incorperate these errors for more accurate error calculation
             dI_corrected = (
-                np.sqrt((sample_scatter.dI**2 + can_scatter.dI**2) / T_sample**2) / I_0
+                np.sqrt(sample_scatter.dI**2 + can_scatter.dI**2) / (T_sample * I_0)
             )
     else:
         # Assume no can is used as when using solid samples, crystals etc. or that its effect is ignored
@@ -176,7 +176,7 @@ def workspace_from_measurement(
 
         # Ignore error T_sample and I_0
         dI_corrected = (
-            np.sqrt((sample_scatter.dI**2 + background.dI**2) / (T_sample)) / I_0
+            np.sqrt(sample_scatter.dI**2 + background.dI**2) / (T_sample * I_0)
         )
     ws, mon = monochromatic_workspace(
         sample_scatter.name,
