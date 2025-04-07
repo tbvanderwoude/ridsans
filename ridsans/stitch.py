@@ -3,8 +3,8 @@ from mantid.kernel import *
 from mantid.simpleapi import *
 
 
-def stitch_Q_ranges(workspaces, bins=50):
-    """Stitches together workspaces corresponding to different Q ranges, first trimming each workspace to the unmasked Q interval."""
+def trim_workspaces(workspaces):
+    """Trims workspaces to get rid of leading and trailing zeros and NaNs."""
     trimmed_workspaces = []
     Q_stitched_max = -1.0
     Q_stitched_min = 10000
@@ -37,7 +37,13 @@ def stitch_Q_ranges(workspaces, bins=50):
         trimmed_workspaces.append(trimmed_workspace)
         Q_stitched_min = min(Q_stitched_min, Q_min_trim)
         Q_stitched_max = max(Q_stitched_max, Q_max_trim)
+    return trimmed_workspaces, Q_stitched_min, Q_stitched_max
 
+
+def stitch_Q_ranges_1D(workspaces, bins=50):
+    """Stitches together workspaces corresponding to different Q ranges, first trimming each workspace to the unmasked Q interval."""
+
+    trimmed_workspaces, Q_stitched_min, Q_stitched_max = trim_workspaces(workspaces)
     Q_stitched_step = (Q_stitched_max - Q_stitched_min) / bins
     OutScaleFactors = []
     workspace_name = workspaces[0].name().rsplit("_", 1)[0] + "_stitched"
