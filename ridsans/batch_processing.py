@@ -25,15 +25,16 @@ def load_measurement_set_workspaces(
             for index in indices
         ]
     except KeyError:
-        # Figure out how the indices map to Q ranges, sort these to start reducing the highest Q range
+        # Sort measurement indices to first reduce the highest Q range
         index_to_Q = []
         for index in indices:
             Q_range = get_Q_range_id_from_batchfile_index(
                 index, batch_filename, directory
             )
             index_to_Q.append((index, int(Q_range)))
+
+        # Sort the list of indices in decreasing order of Q range index
         sorted_list = sorted(index_to_Q, key=lambda x: -x[1])
-        print(sorted_list)
 
         transmissions = None
         result_list = []
@@ -60,9 +61,11 @@ def load_measurement_set_workspaces(
             # The measurement that is first reduced (with the highest Q range due to sorting) determines the used transmission
             # factor for the other measurements
             if transmissions is None:
+                # Retrieve transmission factors from set workspace properties
                 T_sample = ws_sample.run().getProperty("T_sample").value
                 T_can = ws_sample.run().getProperty("T_can").value
                 transmissions = (T_sample, T_can)
+
             # Divides out the thickness from the sample to get result in units of
             # macroscopic scattering crossection [cm^-1]
             ws_sample /= thickness
@@ -153,7 +156,7 @@ def get_Q_range_id_from_batchfile_index(
     batch = pd.read_csv(batch_filename)
     directory_path = Path(directory)
     row_list = dataframe_row_map(batch.iloc[index].tolist())
-    *file_names, thickness = row_list
+    *file_names, _ = row_list
     x = [
         None if fname is None else (directory_path / fname).with_suffix(".mpa")
         for fname in file_names
