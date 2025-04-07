@@ -114,8 +114,10 @@ def workspace_from_measurement(
     object which is currently not used and the id of the Q range (1 - 4 currently).
     """
     if transmissions is not None:
-        assert len(transmissions) == 2
+        if len(transmissions) != 2:
+            raise ValueError("Length of transmissions passed to reduction should be two, a value of the form [T_sample, T_can] is expected.")
         T_sample, T_can = transmissions
+
     else:
         # Transmission factor of sample and can together
         T_sample_can = compute_transmission_factor(
