@@ -7,12 +7,14 @@ from ridsans.load_util import *
 from ridsans.sansdata import *
 
 
-def create_pixel_adj_workspace(pixel_efficiencies, bins, detectors):
-    """Creates a workspace from a NumPy array of pixel efficiencies to be used in Qxy or Q1D as PixelAdj."""
+def create_pixel_adj_workspace(pixel_efficiencies, bins, detectors, force_reload=False):
+    """Creates a workspace from a NumPy array of pixel efficiencies to be used in Qxy or Q1D as PixelAdj. Retrieves it from the AnalysisDataService if it is already loaded and force_reload is not set."""
     x = np.tile(bins, detectors)
     y = pixel_efficiencies
     y[y <= 0] = 1
     try:
+        if force_reload:
+            raise KeyError("force_reload is set")
         pixel_adj = ADS.retrieve("PixelAdj")
     except KeyError:
         pixel_adj = CreateWorkspace(
