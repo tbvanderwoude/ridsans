@@ -1,8 +1,15 @@
 from ridsans.batch_processing import *
 from ridsans.reduce import *
 
-# This could also be a list like [0,1,2,3] or any other iterable
+# In this example, a set of measurement indices corresponding to four Q ranges
+# for one sample is processed in one call to load_measurement_set_workspaces.
+# This makes it possible to use the widest Q range (Q4) to define the most
+# accurate transmission factors which are then used in the intensity
+# correction of all four.
+
+# indices could also be a list like [0,1,2,3] or any other iterable
 indices = range(0, 4)
+
 workspaces = load_measurement_set_workspaces(
     indices,
     "pixel-efficiency.txt.gz",

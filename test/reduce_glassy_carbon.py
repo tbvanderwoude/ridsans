@@ -1,6 +1,11 @@
 from ridsans.batch_processing import *
 from ridsans.reduce import *
 
+# In this example, measurement indices corresponding to four Q ranges
+# for one sample are processed in separate calls to load_batchfile_index_workspaces.
+# This means that transmission factors are calculated for all four independently in
+# the intensity correction.
+
 for index in range(0, 4):
     ws_sample, ws_direct, mon, ws_pixel_adj, Q_range_index = (
         load_batchfile_index_workspaces(
