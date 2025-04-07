@@ -99,9 +99,27 @@ def workspace_from_measurement(
         # If can transmission measurement is included
         if can_transmission is not None:
             T_can = compute_transmission_factor(can_transmission, direct, background)
-
+        if T_can == 0.0:
+            raise ValueError("T_can is zero, please check your input workspaces.")
         T_sample = T_sample_can / T_can
     print(f"Transmission factors: T_sample = {T_sample}; T_can = {T_can}")
+
+    # Hard errors for T_sample, T_can outside of 0 to 1 range
+    if T_sample < 0.0:
+        raise ValueError("T_sample is negative, please check your input workspaces.")
+    if T_sample > 1.0:
+        # In principle, there are samples that could give a netto increase in neutrons...
+        raise ValueError("T_sample is greater than one, please check your input workspaces.")
+    if T_can < 0.0:
+        raise ValueError("T_can is negative, please check your input workspaces.")
+    if T_sample > 1.0:
+        raise ValueError("T_can is greater than one, please check your input workspaces.")
+    
+    # Warnings for inadequate transmission coefficients, this indicates the single scattering limit does not exactly apply
+    if T_can <  0.8:
+        print(f"Warning: T_can is low (T_can = {T_can} < 0.8), multiple scattering cannot be neglected.")
+    if T_sample <  0.8:
+        print(f"Warning: T_sample is low (T_sample = {T_sample} < 0.8), multiple scattering cannot be neglected.")
 
     # Compensate for a differing monitor flux-ratio between scatter and transmission measurement
     # The monitor count indicates what the total rate of neutrons
