@@ -117,7 +117,9 @@ def workspace_from_measurement(
     """
     if transmissions is not None:
         if len(transmissions) != 2:
-            raise ValueError("Length of transmissions passed to reduction should be two, a value of the form [T_sample, T_can] is expected.")
+            raise ValueError(
+                "Length of transmissions passed to reduction should be two, a value of the form [T_sample, T_can] is expected."
+            )
         T_sample, T_can = transmissions
 
     else:
