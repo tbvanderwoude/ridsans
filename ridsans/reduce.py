@@ -71,7 +71,9 @@ def reduction_setup_RIDSANS(
         MaskDetectors(Workspace=ws_sample, MaskedWorkspace=mask_workspace)
 
 
-def reduce_RIDSANS_1D(ws_sample, ws_pixel_adj, output_workspace=None):
+def reduce_RIDSANS_1D(
+    ws_sample, ws_pixel_adj, output_workspace=None, number_of_bins=200
+):
     """Performs a 1D reduction of the measurement. This assumes reduction_setup_RIDSANS has been run before. The resulting workspace represents the macroscopic cross-section over sample thickness t."""
     # Directly get the sample position
     sample_position = ws_sample.getInstrument().getSample().getPos()
@@ -85,7 +87,7 @@ def reduce_RIDSANS_1D(ws_sample, ws_pixel_adj, output_workspace=None):
     ds_dist = -sample_position.Z()
     r = active_w / 2
     Q_max = 4 * np.pi / L0 * np.sin(np.arctan(r / (ds_dist)) / 2)  # AA-1
-    output_binning = np.linspace(0, Q_max, 201)
+    output_binning = np.linspace(0, Q_max, number_of_bins + 1)
     name = ws_sample.name() + "_dSigma/dOmega_1D"
     if output_workspace is not None:
         name = output_workspace
@@ -100,7 +102,9 @@ def reduce_RIDSANS_1D(ws_sample, ws_pixel_adj, output_workspace=None):
     return reduced_ws_1D
 
 
-def reduce_RIDSANS_2D(ws_sample, ws_pixel_adj, output_workspace=None):
+def reduce_RIDSANS_2D(
+    ws_sample, ws_pixel_adj, output_workspace=None, number_of_bins=200
+):
     """Performs a 2D reduction of the measurement. This assumes reduction_setup_RIDSANS has been run before. Assuming the sample thickness t has already been divided out of the ws_sample workspace, the output represents the macroscopic cross-section."""
 
     # Directly get the sample position
@@ -115,7 +119,7 @@ def reduce_RIDSANS_2D(ws_sample, ws_pixel_adj, output_workspace=None):
     ds_dist = -sample_position.Z()
     r = active_w / 2
     Q_max = 4 * np.pi / L0 * np.sin(np.arctan(r / (ds_dist)) / 2)
-    delta_Q = Q_max / 100
+    delta_Q = Q_max / (number_of_bins / 2)
     name = ws_sample.name() + "_dSigma/dOmega_2D"
     if output_workspace is not None:
         name = output_workspace
