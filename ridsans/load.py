@@ -163,12 +163,12 @@ def workspace_from_measurement(
             # Per the formula, when the same transmission is used for sample and can scattering,
             # the background cancels...
             # TODO: verify this is allowed
-            I_corrected = (1 / T_sample * (sample_scatter.I - can_scatter.I)) / I_0
+            I_corrected = (1 / T_sample * (sample_scatter.I - can_scatter.I * sample_can_ratio)) / I_0
 
             # Ignore error T_sample, T_can and I_0
             # TODO: incorperate these errors for more accurate error calculation
             dI_corrected = (
-                np.sqrt(sample_scatter.dI**2 + can_scatter.dI**2) / (T_sample * I_0)
+                np.sqrt(sample_scatter.dI**2 + (can_scatter.dI * sample_can_ratio)**2) / (T_sample * I_0)
             )
     else:
         # Assume no can is used as when using solid samples, crystals etc. or that its effect is ignored
