@@ -10,7 +10,8 @@ from ridsans.sansdata import *
 def create_pixel_adj_workspace(pixel_efficiencies, bins, detectors, force_reload=False):
     """Creates a workspace from a NumPy array of pixel efficiencies to be used in Qxy or Q1D as PixelAdj. Retrieves it from the AnalysisDataService if it is already loaded and force_reload is not set."""
     x = np.tile(bins, detectors)
-    y = pixel_efficiencies
+    y = pixel_efficiencies[:, :, 0]
+    e = pixel_efficiencies[:, :, 1]
     y[y <= 0] = 1
     try:
         if force_reload:
@@ -22,6 +23,7 @@ def create_pixel_adj_workspace(pixel_efficiencies, bins, detectors, force_reload
             UnitX="Wavelength",
             DataX=x,
             DataY=y,
+            DataE=e,
             NSpec=detectors,
         )
     return pixel_adj
@@ -274,7 +276,7 @@ def load_RIDSANS(
     - A sample and can scatter and transmission to make calculation of sample and can transmission factors possible
     """
     print("Starting load_RIDSANS")
-    relative_pixel_efficiency = np.loadtxt(efficiency_file)
+    relative_pixel_efficiency = np.load(efficiency_file)
     file_list = [
         sample_scatter_file,
         sample_transmission_file,

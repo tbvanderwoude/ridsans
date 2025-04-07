@@ -12,7 +12,7 @@ indices = range(0, 4)
 
 workspaces = load_measurement_set_workspaces(
     indices,
-    "pixel-efficiency.txt.gz",
+    "pixel-efficiency.npy",
     "test.csv",
     directory="test-data",
 )

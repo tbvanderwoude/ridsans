@@ -11,3 +11,4 @@ __pycache__/
 *.gz
 ridsans.egg-info
 *_mask.xml
+*.npy
