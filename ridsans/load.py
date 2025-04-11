@@ -123,7 +123,7 @@ def workspace_from_measurement(
                 "Length of transmissions passed to reduction should be two, a value of the form [T_sample, T_can] is expected."
             )
         T_sample, T_can = transmissions
-
+        T_sample_can = T_sample * T_can
     else:
         # Transmission factor of sample and can together
         T_sample_can = compute_transmission_factor(
