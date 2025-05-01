@@ -201,7 +201,7 @@ class SansData:
             self.log("No header was found, assuming this is a background measurement")
             for key in FZZ_map:
                 if key in self.filename:
-                    self.d = (FZZ_map[key] + 1320) / 1e3
+                    self.d = (FZZ_map[key] + config["sample_offset"]) / 1e3
                     self.Q_range_index = key[1:]
         else:
             self.header_params = {}
@@ -214,7 +214,7 @@ class SansData:
             closest_key, _ = get_closest_Q_range(uncorrected_distance)
             # Extracts the Q range (value from 1 - 4)
             self.Q_range_index = closest_key[1:]
-            self.d = (uncorrected_distance + 1320) / 1e3  # [m] 1320 is the offset
+            self.d = (uncorrected_distance + config["sample_offset"]) / 1e3  # [m] 1320 is the offset
             self.log(f"Detector to sample distance: {self.d:.4g} m")
 
             self.velocity_selector_speed = self.load_velocity_selector()  # RPM

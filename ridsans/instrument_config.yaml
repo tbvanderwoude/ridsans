@@ -19,6 +19,9 @@ FZZ_map:
   Q3: 3422.98528 # mm
   Q4: 1432.00036 # mm
 
+# TODO: update this value
+sample_offset: 1320 # mm
+
 # From velocity selector characterization
 a_fit: 1.27085576e05  # AA / RPM
 b_fit: 3.34615760e-03  # AA
