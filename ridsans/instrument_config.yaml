@@ -18,6 +18,7 @@ FZZ_map:
   Q2: 7427.9968 # mm
   Q3: 3422.98528 # mm
   Q4: 1432.00036 # mm
+  Q5: 500.000   # mm
 
 # TODO: update this value
 sample_offset: 1320 # mm

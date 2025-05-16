@@ -8,7 +8,7 @@ from ridsans.reduce import *
 # correction of all four.
 
 # indices could also be a list like [0,1,2,3] or any other iterable
-indices = range(0, 4)
+indices = range(0, 5)
 
 workspaces = load_measurement_set_workspaces(
     indices,
