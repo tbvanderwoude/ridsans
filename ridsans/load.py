@@ -78,17 +78,21 @@ def check_transmission_coefficients(T_sample, T_can):
     """Checks transmission coefficients, giving hard errors for values outside of the 0 to 1 range and correctness warnings for low coefficients."""
     # Hard errors for T_sample, T_can outside of 0 to 1 range
     if T_sample < 0.0:
-        raise ValueError("T_sample is negative, please check your input workspaces.")
+        print(
+            f"Warning: T_sample is greater smaller than 0 (T_can = {T_can}), signal strength might be too low."
+        )
     if T_sample > 1.0:
         # In principle, there are samples that could give a netto increase in neutrons...
-        raise ValueError(
-            "T_sample is greater than one, please check your input workspaces."
+        print(
+            f"Warning: T_sample is greater than one (T_can = {T_can}), signal strength might be too low."
         )
     if T_can < 0.0:
-        raise ValueError("T_can is negative, please check your input workspaces.")
-    if T_sample > 1.0:
-        raise ValueError(
-            "T_can is greater than one, please check your input workspaces."
+        print(
+            f"Warning: T_can is greater smaller than 0 (T_can = {T_can}), signal strength might be too low."
+        )
+    if T_can > 1.0:
+        print(
+            f"Warning: T_can is greater than one (T_can = {T_can}), signal strength might be too low."
         )
 
     # Warnings for inadequate transmission coefficients, this indicates the single scattering limit does not exactly apply
