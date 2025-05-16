@@ -87,7 +87,8 @@ def reduce_RIDSANS_1D(
     ds_dist = -sample_position.Z()
     r = active_w / 2
     Q_max = 4 * np.pi / L0 * np.sin(np.arctan(r / (ds_dist)) / 2)  # AA-1
-    output_binning = np.linspace(0, Q_max, number_of_bins + 1)
+    dQ = Q_max / (number_of_bins + 1)
+    output_binning = [0,dQ,Q_max]
     name = ws_sample.name() + "_dSigma/dOmega_1D"
     if output_workspace is not None:
         name = output_workspace
