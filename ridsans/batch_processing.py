@@ -46,7 +46,7 @@ def load_measurement_set_workspaces(
                 can_transmission_file,
                 direct_file,
                 background_file,
-                thickness,
+                batch_file_thickness,
             ) = get_file_data_from_batchfile_index(index, batch_filename, directory)
             ws_sample, ws_direct, mon, ws_pixel_adj, Q_range_index = load_RIDSANS(
                 sample_scatter_file,
@@ -68,6 +68,7 @@ def load_measurement_set_workspaces(
 
             # Divides out the thickness from the sample to get result in units of
             # macroscopic scattering crossection [cm^-1]
+            thickness = retrieve_thickness(batch_file_thickness, ws_sample)
             ws_sample /= thickness
             result_list.append((ws_sample, ws_direct, mon, ws_pixel_adj, Q_range_index))
         return result_list
@@ -95,7 +96,7 @@ def load_batchfile_index_workspaces(
             can_transmission_file,
             direct_file,
             background_file,
-            thickness,
+            batch_file_thickness,
         ) = get_file_data_from_batchfile_index(index, batch_filename, directory)
         ws_sample, ws_direct, mon, ws_pixel_adj, Q_range_index = load_RIDSANS(
             sample_scatter_file,
@@ -108,9 +109,17 @@ def load_batchfile_index_workspaces(
         )
         # Divides out the thickness from the sample to get result in units of
         # macroscopic scattering crossection [cm^-1]
+        thickness = retrieve_thickness(batch_file_thickness, ws_sample)
         ws_sample /= thickness
         return ws_sample, ws_direct, mon, ws_pixel_adj, Q_range_index
 
+def retrieve_thickness(batch_file_thickness, ws_sample):
+    """Determines the sample thickness from both the sample workspace and the value in the batch sheet entry"""
+    thickness = batch_file_thickness
+    if not batch_file_thickness:
+        thickness = ws_sample.run().getProperty("thickness").value
+    print(thickness)
+    return thickness
 
 def retrieve_batchfile_index_workspaces(
     index, batch_filename="sans-batchfile.csv", directory="data"

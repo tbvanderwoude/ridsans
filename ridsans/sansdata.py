@@ -238,6 +238,18 @@ class SansData:
                 self.sample = self.header_params["Sample"]
             self.log(f"Sample: {self.sample}")
 
+            # Load the sample thickness from the file header if it is included
+            thickness_str = self.header_params.get("Thickness[cm]")
+            if thickness_str is not None:
+                try:
+                    self.thickness = float(thickness_str)
+                except ValueError:
+                    raise ValueError(f"Invalid Thickness[cm] value: {thickness_str}")
+            else:
+                self.thickness = None  
+                self.log("Thickness[cm] not found in header; defaulting to None and reading from batch")
+
+
         # Extract CDAT2 array from remaining file as raw detector counts
 
         # Measurement data sequences look like [CDAT2,1048576]
