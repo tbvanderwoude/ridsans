@@ -11,7 +11,7 @@ for index in range(0, 4):
         load_batchfile_index_workspaces(
             index,
             "pixel-efficiency.npy",
-            "test.csv",
+            "test-data/test.csv",
             directory="test-data",
         )
     )
