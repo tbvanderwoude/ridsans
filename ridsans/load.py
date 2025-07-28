@@ -35,7 +35,7 @@ def compute_transmission_factor(sample_transmission, direct, background):
     beam_variation_factor = direct.I_0 / sample_transmission.I_0
     # It is important to correct for background to avoid overestimating the transmission
     return np.sum(
-        sample_transmission.I * beam_variation_factor - background.I
+        beam_variation_factor * (sample_transmission.I - background.I)
     ) / np.sum(direct.I - background.I)
 
 
@@ -158,7 +158,7 @@ def workspace_from_measurement(
 
     # In other words, this gives an estimate of the the total empty beam intensity
     # at the flux of the scattering measurement
-    I_0 = flux_factor * np.sum(direct.I)
+    I_0 = flux_factor * np.sum(direct.I - background.I)
 
     # Corrected intensity considering background and tranmission factors of sample and can.
     if can_scatter is not None:
@@ -170,7 +170,7 @@ def workspace_from_measurement(
         if can_transmission is not None:
             I_corrected = (
                 1 / (T_sample_can) * (sample_scatter.I - background.I)
-                - 1 / T_can * (can_scatter.I * sample_can_ratio - background.I)
+                - 1 / T_can * sample_can_ratio * (can_scatter.I - background.I)
             ) / I_0
 
             # Ignore error T_sample, T_can and I_0
@@ -179,8 +179,8 @@ def workspace_from_measurement(
             dI_corrected = (
                 np.sqrt(
                     (sample_scatter.dI**2 + background.dI**2) / (T_sample_can) ** 2
-                    + ((can_scatter.dI * sample_can_ratio) ** 2 + background.dI**2)
-                    / (T_can) ** 2
+                    + sample_can_ratio ** 2 * (can_scatter.dI ** 2 + background.dI**2)
+                    / T_can ** 2
                 )
                 / I_0
             )
@@ -189,13 +189,13 @@ def workspace_from_measurement(
             # the background cancels...
             # TODO: verify this is allowed
             I_corrected = (
-                1 / T_sample * (sample_scatter.I - can_scatter.I * sample_can_ratio)
+                1 / T_sample * ((sample_scatter.I - background.I) - (can_scatter.I - background.I) * sample_can_ratio)
             ) / I_0
 
             # Ignore error T_sample, T_can and I_0
             # TODO: incorperate these errors for more accurate error calculation
             dI_corrected = np.sqrt(
-                sample_scatter.dI**2 + (can_scatter.dI * sample_can_ratio) ** 2
+                sample_scatter.dI**2 + background.dI**2*(1 - sample_can_ratio)**2 + (can_scatter.dI * sample_can_ratio) ** 2
             ) / (T_sample * I_0)
     else:
         # Assume no can is used as when using solid samples, crystals etc. or that its effect is ignored
