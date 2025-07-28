@@ -216,6 +216,11 @@ def workspace_from_measurement(
     # Including the transmissions as property of the workspace enables easy retrieval for transmission factor reuse
     ws.getRun().addProperty("T_sample", float(T_sample), True)
     ws.getRun().addProperty("T_can", float(T_can), True)
+
+    if sample_scatter.thickness is not None:
+        # Add the sample thickness as workspace property if it existed in the file, which makes
+        # it a field of sample_scatter
+        ws.getRun().addProperty("thickness", float(sample_scatter.thickness), True)
     return (
         ws,
         mon,
